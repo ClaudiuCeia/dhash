@@ -71,7 +71,7 @@ export const toAscii = (hash: string, chars = ["░░", "██"]) => {
   return row + chars[0];
 };
 
-export const save = async (hash: string, file: string) => {
+export const raw = async (hash: string): Promise<Uint8Array> => {
   const bin = parseInt(hash, 16).toString(2).split("");
   const out = new Image(8, 8);
 
@@ -91,6 +91,10 @@ export const save = async (hash: string, file: string) => {
   }
 
   out.setPixelAt(8, 8, white);
-  const enc = await out.encode();
+  return await out.encode();
+};
+
+export const save = async (hash: string, file: string): Promise<void> => {
+  const enc = await raw(hash);
   await Deno.writeFile(`${file}.png`, enc);
 };
