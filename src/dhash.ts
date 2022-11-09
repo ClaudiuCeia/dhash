@@ -5,14 +5,17 @@ import {
 } from "https://deno.land/x/imagescript@v1.2.14/mod.ts";
 import { normalize, join } from "https://deno.land/std@0.153.0/path/mod.ts";
 
-export const dhash = async (path: string) => {
-  const resolvedPath = join(Deno.cwd(), normalize(path));
+export const dhash = async (pathOrSrc: string | Uint8Array) => {
+  let file = pathOrSrc;
 
-  let file;
-  try {
-    file = await Deno.readFile(resolvedPath);
-  } catch {
-    throw new Error(`Failed to open "${resolvedPath}"`);
+  if (typeof pathOrSrc === "string") {
+    const resolvedPath = join(Deno.cwd(), normalize(pathOrSrc));
+
+    try {
+      file = await Deno.readFile(resolvedPath);
+    } catch {
+      throw new Error(`Failed to open "${resolvedPath}"`);
+    }
   }
 
   const image = await decode(file);

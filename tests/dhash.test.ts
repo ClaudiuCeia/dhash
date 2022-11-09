@@ -1,8 +1,14 @@
 import { assertEquals } from "https://deno.land/std@0.149.0/testing/asserts.ts";
+import { join, normalize } from "https://deno.land/std@0.153.0/path/mod.ts";
 import { compare, dhash, toAscii } from "../src/dhash.ts";
 
 Deno.test("sample", async () => {
   assertEquals(await dhash("./tests/dalle.png"), "5c20c6b680f80800");
+
+  const __dirname = new URL(".", import.meta.url).pathname;
+  const resolvedPath = join(__dirname, normalize("dalle.png"));
+  const uint8arr = await Deno.readFile(resolvedPath);
+  assertEquals(await dhash(uint8arr), "5c20c6b680f80800");
 });
 
 Deno.test("comparison", async () => {
