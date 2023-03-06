@@ -1,11 +1,19 @@
-# dhash
+# dhash 
+_A `dhash` implementation for Deno._
+
+A fast algorithm that allows checking if two images are "kind of" the same (the same source image, slightly modified). Examples:
+
+- A resized, compressed, slightly cropped, or color-altered image compared with the original
+- A watermarked image versus it's source 
+- Meme images (mostly the same template, different text)
+
+It does this by computing a `perceptual hash` of each image and then using it to compare similarity.
 
 ```
 Perceptual hashing is the use of a fingerprinting algorithm that produces a 
 snippet or fingerprint of various forms of multimedia.
 ```
 
-A `dhash` implementation for Deno.
 
 Based on the
 ["Kind of Like That"](https://www.hackerfactor.com/blog/?/archives/529-Kind-of-Like-That.html)
