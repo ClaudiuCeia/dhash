@@ -3,13 +3,13 @@ import {
   GIF,
   Image,
 } from "https://deno.land/x/imagescript@v1.2.14/mod.ts";
-import { normalize, join } from "https://deno.land/std@0.153.0/path/mod.ts";
+import { normalize, resolve } from "https://deno.land/std@0.153.0/path/mod.ts";
 
 export const dhash = async (pathOrSrc: string | Uint8Array) => {
   let file = pathOrSrc;
 
   if (typeof pathOrSrc === "string") {
-    const resolvedPath = join(Deno.cwd(), normalize(pathOrSrc));
+    const resolvedPath = resolve(Deno.cwd(), normalize(pathOrSrc));
 
     try {
       file = await Deno.readFile(resolvedPath);
