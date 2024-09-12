@@ -35,7 +35,7 @@ export const dhash = async (pathOrSrc: string | Uint8Array) => {
     }
   }
 
-  return parseInt(out.join(""), 2).toString(16);
+  return parseInt(out.join(""), 2).toString(16).padStart(16, 0);
 };
 
 export const compare = (hash1: string, hash2: string) => {
