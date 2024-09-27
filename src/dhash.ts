@@ -20,7 +20,7 @@ export const dhash = async (pathOrSrc: string | Uint8Array) => {
 
   const image = await decode(file);
   if (image instanceof GIF) {
-    throw new Error("GIF not supported");
+    throw new Error("GIF format is not supported");
   }
 
   const grayscale = image.saturation(0);
@@ -35,7 +35,7 @@ export const dhash = async (pathOrSrc: string | Uint8Array) => {
     }
   }
 
-  return parseInt(out.join(""), 2).toString(16).padStart(16, 0);
+  return parseInt(out.join(""), 2).toString(16).padStart(16, "0");
 };
 
 export const compare = (hash1: string, hash2: string) => {
@@ -47,8 +47,8 @@ export const compare = (hash1: string, hash2: string) => {
   }
 
   let counter = 0;
-  for (const [idx, c] of hash1.split("").entries()) {
-    if (c !== hash2[idx]) {
+  for (let i = 0; i < hash1.length; i++) {
+    if (hash1[i] !== hash2[i]) {
       counter++;
     }
   }
@@ -90,7 +90,6 @@ export const raw = async (hash: string): Promise<Uint8Array> => {
     }
   }
 
-  out.setPixelAt(8, 8, white);
   return await out.encode();
 };
 
