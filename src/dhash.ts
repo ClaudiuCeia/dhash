@@ -1,11 +1,9 @@
-import {
-  decode,
-  GIF,
-  Image,
-} from "npm:imagescript@1.3.0";
+import sharp from "npm:sharp";
 import { normalize, resolve } from "@std/path";
 
-export const dhash = async (pathOrSrc: string | Uint8Array): Promise<string> => {
+export const dhash = async (
+  pathOrSrc: string | Uint8Array,
+): Promise<string> => {
   let file = pathOrSrc;
 
   if (typeof pathOrSrc === "string") {
@@ -18,24 +16,20 @@ export const dhash = async (pathOrSrc: string | Uint8Array): Promise<string> => 
     }
   }
 
-  const image = await decode(file);
-  if (image instanceof GIF) {
-    throw new Error("GIF format is not supported");
-  }
-
-  const grayscale = image.saturation(0);
-  const resized = grayscale.resize(9, 8);
+  const resized = await sharp(file).grayscale().resize(9, 8).raw().toBuffer();
 
   const out = [];
-  for (let x = 1; x <= resized.height; x++) {
-    for (let y = 1; y <= resized.height; y++) {
-      const left = resized.getPixelAt(x, y);
-      const right = resized.getPixelAt(x + 1, y);
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const left = resized[row * 9 + col];
+      const right = resized[row * 9 + col + 1];
       out.push(left < right ? 1 : 0);
     }
   }
-
-  return parseInt(out.join(""), 2).toString(16).padStart(16, "0");
+  const binary = out.join("");
+  return BigInt("0b" + binary)
+    .toString(16)
+    .padStart(16, "0");
 };
 
 export const compare = (hash1: string, hash2: string): number => {
@@ -45,15 +39,11 @@ export const compare = (hash1: string, hash2: string): number => {
         Got ${hash1} of ${hash1.length} and ${hash2} of ${hash2.length}
     `);
   }
+  const a = BigInt("0x" + hash1);
+  const b = BigInt("0x" + hash2);
+  const xor = a ^ b;
 
-  let counter = 0;
-  for (let i = 0; i < hash1.length; i++) {
-    if (hash1[i] !== hash2[i]) {
-      counter++;
-    }
-  }
-
-  return counter;
+  return xor.toString(2).split("1").length - 1;
 };
 
 export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
@@ -71,29 +61,23 @@ export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
   return row + chars[0];
 };
 
-export const raw = async (hash: string): Promise<Uint8Array> => {
-  const bin = parseInt(hash, 16).toString(2).split("");
-  const out = new Image(8, 8);
+export async function raw(hash: string): Promise<Uint8Array> {
+  const bin = BigInt("0x" + hash).toString(2).padStart(64, "0");
 
-  const white = Image.rgbToColor(255, 255, 255);
-  const black = Image.rgbToColor(0, 0, 0);
+  const pixels = new Uint8Array(8 * 8); // grayscale 0–255
 
-  let column = 1;
-  let row = 1;
-  for (const bit of bin) {
-    console.log(column, row);
-    out.setPixelAt(column, row, parseInt(bit) === 1 ? black : white);
-    row++;
-    if (row === 9) {
-      column++;
-      row = 1;
-    }
+  for (let i = 0; i < 64; i++) {
+    pixels[i] = bin[i] === "1" ? 0 : 255; // black or white
   }
 
-  return await out.encode();
-};
+  const image = sharp(pixels, {
+    raw: { width: 8, height: 8, channels: 1 },
+  });
 
-export const save = async (hash: string, file: string): Promise<void> => {
-  const enc = await raw(hash);
-  await Deno.writeFile(`${file}.png`, enc);
-};
+  return await image.png().toBuffer();
+}
+
+export async function save(hash: string, filePath: string): Promise<void> {
+  const buffer = await raw(hash);
+  await Deno.writeFile(`${filePath}.png`, buffer);
+}

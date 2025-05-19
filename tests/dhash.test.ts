@@ -3,12 +3,12 @@ import { join, normalize } from "https://deno.land/std@0.153.0/path/mod.ts";
 import { compare, dhash, toAscii } from "../src/dhash.ts";
 
 Deno.test("sample", async () => {
-  assertEquals(await dhash("./tests/dalle.png"), "5c20c6b680f80800");
+  assertEquals(await dhash("./tests/dalle.png"), "77352c8c2da4746c");
 
   const __dirname = new URL(".", import.meta.url).pathname;
   const resolvedPath = join(__dirname, normalize("dalle.png"));
   const uint8arr = await Deno.readFile(resolvedPath);
-  assertEquals(await dhash(uint8arr), "5c20c6b680f80800");
+  assertEquals(await dhash(uint8arr), "77352c8c2da4746c");
 });
 
 Deno.test("comparison", async () => {
@@ -22,23 +22,23 @@ Deno.test("comparison", async () => {
   ]);
 
   assertEquals(compare(res[0], res[1]), 0);
-  assertEquals(compare(res[0], res[2]), 5);
-  assertEquals(compare(res[0], res[3]), 14);
-  assertEquals(compare(res[0], res[4]), 7);
-  assertEquals(compare(res[0], res[5]), 6);
+  assertEquals(compare(res[0], res[2]), 4);
+  assertEquals(compare(res[0], res[3]), 26);
+  assertEquals(compare(res[0], res[4]), 1);
+  assertEquals(compare(res[0], res[5]), 2);
 });
 
 Deno.test("print", async () => {
   const hash = await dhash("./tests/dalle.png");
   assertEquals(
     toAscii(hash),
-    `██░░██████░░░░░░
-    ░░██░░░░░░░░░░██
-    ██░░░░░░████░░██
-    ░░████░░████░░██
-    ░░░░░░░░░░░░░░██
-    ████████░░░░░░░░
-    ░░░░░░██░░░░░░░░
+    `██████░░██████░░
+    ░░████░░██░░██░░
+    ░░██░░████░░░░██
+    ░░░░░░████░░░░░░
+    ░░██░░████░░████
+    ░░██░░░░██░░░░░░
+    ██████░░██░░░░░░
     ░░░░░░░░░░░░░░░░`.replaceAll(" ", "")
   );
 });
