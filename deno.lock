@@ -1,5 +1,19 @@
 {
-  "version": "4",
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/path@^1.0.9": "1.0.9",
+    "npm:imagescript@1.3.0": "1.3.0"
+  },
+  "jsr": {
+    "@std/path@1.0.9": {
+      "integrity": "260a49f11edd3db93dd38350bf9cd1b4d1366afa98e81b86167b4e3dd750129e"
+    }
+  },
+  "npm": {
+    "imagescript@1.3.0": {
+      "integrity": "sha512-lCYzQrWzdnA68K03oMj/BUlBJrVBnslzDOgGFymAp49NmdGEJxGeN7sHh5mCva0nQkq+kkKSuru2zLf1m04+3A=="
+    }
+  },
   "remote": {
     "https://deno.land/std@0.149.0/fmt/colors.ts": "6f9340b7fb8cc25a993a99e5efc56fe81bb5af284ff412129dd06df06f53c0b4",
     "https://deno.land/std@0.149.0/testing/_diff.ts": "029a00560b0d534bc0046f1bce4bd36b3b41ada3f2a3178c85686eb2ff5f1413",
@@ -44,5 +58,10 @@
     "https://deno.land/x/imagescript@v1.2.14/v2/ops/resize.mjs": "814e78ebce8eaf8f1f918688db7b52a141405e06a36ed4b25d04413d69e7d17b",
     "https://deno.land/x/imagescript@v1.2.14/v2/ops/rotate.mjs": "a1b65616717bd2eed8db406affea3263b4674dada46b56441ef38167a187455d",
     "https://deno.land/x/imagescript@v1.2.14/v2/util/mem.mjs": "4968d400dae069b4bf0ef4767c1802fd2cc7d15d90eda4cfadf5b4cd19b96c6d"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/path@^1.0.9"
+    ]
   }
 }

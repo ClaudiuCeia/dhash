@@ -2,10 +2,10 @@ import {
   decode,
   GIF,
   Image,
-} from "https://deno.land/x/imagescript@v1.2.14/mod.ts";
-import { normalize, resolve } from "https://deno.land/std@0.153.0/path/mod.ts";
+} from "npm:imagescript@1.3.0";
+import { normalize, resolve } from "@std/path";
 
-export const dhash = async (pathOrSrc: string | Uint8Array) => {
+export const dhash = async (pathOrSrc: string | Uint8Array): Promise<string> => {
   let file = pathOrSrc;
 
   if (typeof pathOrSrc === "string") {
@@ -38,7 +38,7 @@ export const dhash = async (pathOrSrc: string | Uint8Array) => {
   return parseInt(out.join(""), 2).toString(16).padStart(16, "0");
 };
 
-export const compare = (hash1: string, hash2: string) => {
+export const compare = (hash1: string, hash2: string): number => {
   if (hash1.length !== hash2.length) {
     throw new Error(`
         Hashes should be of the same length.
@@ -56,7 +56,7 @@ export const compare = (hash1: string, hash2: string) => {
   return counter;
 };
 
-export const toAscii = (hash: string, chars = ["░░", "██"]) => {
+export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
   const bin = parseInt(hash, 16).toString(2).split("");
   let counter = 0;
   let row = "";
