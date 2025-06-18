@@ -1,4 +1,4 @@
-import sharp from "npm:sharp@0.34.1";
+import sharp from "npm:sharp@0.34.2";
 import { normalize, resolve } from "@std/path";
 
 export const dhash = async (
