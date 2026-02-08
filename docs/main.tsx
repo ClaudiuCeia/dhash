@@ -1,9 +1,19 @@
 /** @jsxImportSource preact */
 import { dhash } from "dhash_jsr";
 import { renderToString } from "preact-render-to-string";
+import docsConfig from "./deno.json" with { type: "json" };
 
 const MAX_FILES = 20;
 const MAX_BYTES = 10 * 1024 * 1024;
+
+const LIB_SPEC =
+  (docsConfig as { imports?: Record<string, string> }).imports?.dhash_jsr ??
+    "jsr:@claudiu-ceia/dhash";
+const LIB_VERSION = (() => {
+  // Example: "jsr:@claudiu-ceia/dhash@^0.3.2"
+  const m = String(LIB_SPEC).match(/@\^?(\d+\.\d+\.\d+)/);
+  return m ? m[1] : "";
+})();
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data, null, 2) + "\n", {
@@ -113,18 +123,18 @@ tailwind.config = {
             <div class="absolute left-1/2 top-1/2 h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-200/30 blur-3xl" />
           </div>
 
-          <main class="relative mx-auto w-full max-w-6xl px-4 py-10 sm:py-14">
+          <main class="relative mx-auto w-full max-w-7xl px-4 py-12 sm:py-16">
             <header class="flex items-start justify-between gap-4">
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
-                  <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                  <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                     dHash demo
                   </h1>
                   <span class="inline-flex items-center rounded-full border border-slate-200 bg-white/60 px-2 py-0.5 text-[11px] font-medium text-slate-600 shadow-sm">
                     perceptual hashing
                   </span>
                 </div>
-                <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                <p class="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
                   Upload up to{" "}
                   <span class="font-semibold text-slate-900">{MAX_FILES}</span>
                   {" "}
@@ -140,7 +150,7 @@ tailwind.config = {
                   href="https://github.com/ClaudiuCeia/dhash"
                   target="_blank"
                   rel="noreferrer"
-                  class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/70 text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/75 text-slate-900 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
                   aria-label="GitHub repository"
                   title="GitHub"
                 >
@@ -150,7 +160,7 @@ tailwind.config = {
                   href="https://jsr.io/@claudiu-ceia/dhash"
                   target="_blank"
                   rel="noreferrer"
-                  class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/70 text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/75 text-slate-900 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
                   aria-label="JSR package"
                   title="JSR"
                 >
@@ -159,8 +169,8 @@ tailwind.config = {
               </nav>
             </header>
 
-            <section class="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
-              <div class="rounded-3xl border border-slate-200/70 bg-white/60 p-5 shadow-soft backdrop-blur sm:p-6">
+            <section class="mt-10 grid gap-6 lg:grid-cols-[1fr_400px]">
+              <div class="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-soft backdrop-blur sm:p-7">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <div class="min-w-0">
                     <h2 class="text-base font-semibold text-slate-900">
@@ -175,14 +185,14 @@ tailwind.config = {
                     <button
                       id="pick"
                       type="button"
-                      class="inline-flex items-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
                     >
                       Choose images
                     </button>
                     <button
                       id="clear"
                       type="button"
-                      class="inline-flex items-center rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                      class="inline-flex items-center rounded-xl border border-slate-200 bg-white/75 px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:shadow-md disabled:opacity-60"
                       disabled
                     >
                       Clear
@@ -199,7 +209,7 @@ tailwind.config = {
                 />
 
                 <div class="mt-4 flex flex-wrap items-center gap-3">
-                  <div class="inline-flex items-center rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-xs text-slate-700 shadow-sm">
+                  <div class="inline-flex items-center rounded-2xl border border-slate-200 bg-white/75 px-3 py-2 text-xs text-slate-700 shadow-sm">
                     <span class="mr-2 inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                     <span id="fileLabel">No files selected</span>
                   </div>
@@ -212,11 +222,11 @@ tailwind.config = {
 
                 <div
                   id="grid"
-                  class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+                  class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
                 />
               </div>
 
-              <aside class="rounded-3xl border border-slate-200/70 bg-white/55 p-5 shadow-soft backdrop-blur sm:p-6">
+              <aside class="rounded-3xl border border-slate-200/70 bg-white/55 p-6 shadow-soft backdrop-blur sm:p-7">
                 <h2 class="text-base font-semibold text-slate-900">
                   How it works
                 </h2>
@@ -263,6 +273,16 @@ tailwind.config = {
                   </code>{" "}
                   on Deno Deploy.
                 </p>
+                <div class="mt-4 rounded-2xl border border-slate-200 bg-white/65 p-4 text-xs text-slate-700">
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="font-medium text-slate-900">
+                      Library version
+                    </span>
+                    <code class="rounded bg-slate-900/5 px-1 py-0.5 font-mono">
+                      {LIB_VERSION ? `v${LIB_VERSION}` : "unknown"}
+                    </code>
+                  </div>
+                </div>
               </aside>
             </section>
           </main>
@@ -283,7 +303,7 @@ const CSS = `
 html, body { height: 100%; }
 body {
   margin: 0;
-  background: #ffffff;
+  background: #fbfcff;
 }
 `;
 
@@ -523,10 +543,11 @@ function render() {
   for (const { it, idx } of sorted) {
     const div = document.createElement("div");
     const pending = !it.hash;
-    const base = "group relative rounded-2xl border bg-white/75 p-4 shadow-sm backdrop-blur transition";
+    const base =
+      "group relative rounded-2xl border bg-white/80 p-4 shadow-sm backdrop-blur transition-shadow";
     const active = pending
       ? " opacity-50 cursor-not-allowed border-slate-200"
-      : " cursor-pointer border-slate-200 hover:-translate-y-0.5 hover:shadow-md";
+      : " cursor-pointer border-slate-200 hover:shadow-md";
     const anchored = (idx === anchor)
       ? " ring-2 ring-emerald-300 border-emerald-200 shadow-[0_18px_45px_rgba(16,185,129,0.18)]"
       : "";
@@ -544,12 +565,14 @@ function render() {
     row.className = "flex items-start gap-3";
 
     const img = document.createElement("img");
-    img.className = "h-24 w-24 shrink-0 rounded-xl border border-slate-200 bg-slate-50 object-cover";
+    img.className =
+      "h-24 w-24 shrink-0 rounded-xl border border-slate-300 bg-slate-100 object-cover shadow-inner";
     img.src = it.url;
     img.alt = it.name;
 
     const canvas = document.createElement("canvas");
-    canvas.className = "h-24 w-24 shrink-0 rounded-xl border border-slate-200 bg-slate-50";
+    canvas.className =
+      "h-24 w-24 shrink-0 rounded-xl border border-slate-300 bg-slate-100 shadow-inner";
     canvas.width = 96;
     canvas.height = 96;
     if (it.hash) drawHash(canvas, it.hash);
