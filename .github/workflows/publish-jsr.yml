@@ -27,6 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup Deno
@@ -34,13 +35,18 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Verify tag matches deno.json version
         shell: bash
         run: |
           set -euo pipefail
           tag="${{ inputs.tag || github.ref_name }}"
           tag="${tag#v}"
-          version="$(python -c 'import json; print(json.load(open("deno.json"))["version"])')"
+          version="$(node -p "require('./deno.json').version")"
 
           if [[ "${tag}" != "${version}" ]]; then
             echo "Tag (${GITHUB_REF_NAME}) does not match deno.json version (${version})."
@@ -59,8 +65,36 @@ jobs:
           # in the package settings on jsr.io, and OIDC enabled via `id-token: write`.
           deno publish
 
+      - name: Generate release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ inputs.tag || github.ref_name }}"
+
+          prev_tag="$(
+            git tag --list "v*" --sort=-version:refname \
+              | grep -v "^${tag}$" \
+              | head -n 1 || true
+          )"
+
+          {
+            echo "# ${tag}"
+            echo
+            if [[ -n "${prev_tag}" ]]; then
+              echo "Changes since ${prev_tag}:"
+              echo
+              git log --no-merges --pretty=format:"- %s (%h)" "${prev_tag}..${tag}"
+            else
+              echo "Changes:"
+              echo
+              git log --no-merges --pretty=format:"- %s (%h)" "${tag}"
+            fi
+            echo
+          } > RELEASE_NOTES.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
-          generate_release_notes: true
+          name: ${{ inputs.tag || github.ref_name }}
+          body_path: RELEASE_NOTES.md
