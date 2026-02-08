@@ -1,0 +1,52 @@
+name: Publish to JSR
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "*.*.*"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-jsr-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x
+
+      - name: Verify tag matches deno.json version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          tag="${tag#v}"
+          version="$(deno eval --quiet --allow-read 'console.log(JSON.parse(Deno.readTextFileSync(\"deno.json\")).version)')"
+
+          if [[ "${tag}" != "${version}" ]]; then
+            echo "Tag (${GITHUB_REF_NAME}) does not match deno.json version (${version})."
+            exit 1
+          fi
+
+      - name: Format / Lint / Test
+        run: |
+          deno fmt --check
+          deno lint
+          deno task test
+
+      - name: Publish
+        run: |
+          # Tokenless publishing requires linking the JSR package to this GitHub repository
+          # in the package settings on jsr.io, and OIDC enabled via `id-token: write`.
+          deno publish

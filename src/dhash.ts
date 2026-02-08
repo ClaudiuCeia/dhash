@@ -1,8 +1,26 @@
-import sharp from "npm:sharp@0.34.2";
+import sharp from "sharp";
 import { normalize, resolve } from "@std/path";
+
+export type DHashOptions = {
+  /**
+   * Flip the bit convention for left/right comparisons.
+   *
+   * Default convention is: bit=1 when left < right (increasing intensity).
+   * Set invert=true to use: bit=1 when left >= right.
+   */
+  invert?: boolean;
+};
+
+const MASK_64 = (1n << 64n) - 1n;
+
+export const invertHash = (hash: string): string => {
+  const v = BigInt("0x" + hash);
+  return ((~v) & MASK_64).toString(16).padStart(16, "0");
+};
 
 export const dhash = async (
   pathOrSrc: string | Uint8Array,
+  options: DHashOptions = {},
 ): Promise<string> => {
   let file = pathOrSrc;
 
@@ -23,7 +41,8 @@ export const dhash = async (
     for (let col = 0; col < 8; col++) {
       const left = resized[row * 9 + col];
       const right = resized[row * 9 + col + 1];
-      out.push(left < right ? 1 : 0);
+      const bit = left < right ? 1 : 0;
+      out.push(options.invert ? 1 - bit : bit);
     }
   }
   const binary = out.join("");
@@ -47,18 +66,16 @@ export const compare = (hash1: string, hash2: string): number => {
 };
 
 export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
-  const bin = parseInt(hash, 16).toString(2).split("");
-  let counter = 0;
-  let row = "";
-  for (const bit of bin) {
-    row += bit === "0" ? chars[0] : chars[1];
-    counter++;
-    if (counter === 8) {
-      row += "\n";
-      counter = 0;
-    }
+  // Use BigInt to avoid precision loss; always render 64 bits (8x8).
+  const bin = BigInt("0x" + hash).toString(2).padStart(64, "0");
+  let out = "";
+
+  for (let i = 0; i < 64; i++) {
+    out += bin[i] === "0" ? chars[0] : chars[1];
+    if ((i + 1) % 8 === 0 && i !== 63) out += "\n";
   }
-  return row + chars[0];
+
+  return out;
 };
 
 export async function raw(hash: string): Promise<Uint8Array> {

@@ -1,19 +1,22 @@
-# dhash 
+# dhash
+
 _A `dhash` implementation for Deno._
 
-A fast algorithm that allows checking if two images are "kind of" the same (the same source image, slightly modified). Examples:
+A fast algorithm that allows checking if two images are "kind of" the same (the
+same source image, slightly modified). Examples:
 
-- A resized, compressed, slightly cropped, or color-altered image compared with the original
-- A watermarked image versus it's source 
+- A resized, compressed, slightly cropped, or color-altered image compared with
+  the original
+- A watermarked image versus it's source
 - Meme images (mostly the same template, different text)
 
-It does this by computing a `perceptual hash` of each image and then using it to compare similarity.
+It does this by computing a `perceptual hash` of each image and then using it to
+compare similarity.
 
 ```
 Perceptual hashing is the use of a fingerprinting algorithm that produces a 
 snippet or fingerprint of various forms of multimedia.
 ```
-
 
 Based on the
 ["Kind of Like That"](https://www.hackerfactor.com/blog/?/archives/529-Kind-of-Like-That.html)
@@ -39,33 +42,27 @@ const [hash1, hash2] = await Promise.all([
 console.log(compare(hash1, hash2));
 ```
 
-There are also two functions that you may use to display the fingerprint in a
-non-hash form:
+Bit convention: this implementation sets bit `1` when the pixel intensity
+increases left-to-right (`left < right`). Use `dhash(src, { invert: true })` if
+you need the opposite convention to match another implementation.
+
+## API
+
+In addition to `dhash()` and `compare()`:
 
 ```ts
-/**
-     *  toAscii will return the fingerprint represented as a matrix of
-     *  black/white pixels, represented by default through unicode low density
-     *  and full blocks, ie:
-     *
-     *   ██░░██████░░░░░░
-     *   ░░██░░░░░░░░░░██
-     *   ██░░░░░░████░░██
-     *   ░░████░░████░░██
-     *   ░░░░░░░░░░░░░░██
-     *   ████████░░░░░░░░
-     *   ░░░░░░██░░░░░░░░
-     *   ░░░░░░░░░░░░░░░░
-     * /
-    toAscii(hash: string, chars: [string, string]): string
-
-    /**
-     * save will render the fingerprint as an 8x8px PNG file with black and
-     * white pixels, at the specified path.
-     *
-     * async save(hash: string, file: string): Promise<void>
-     */
+toAscii(hash: string, chars?: [string, string]): string
+raw(hash: string): Promise<Uint8Array> // PNG bytes for the 8x8 fingerprint
+save(hash: string, filePath: string): Promise<void> // writes `${filePath}.png`
 ```
+
+`toAscii()` always renders an 8x8 matrix (64 bits); leading zero bits are
+preserved.
+
+## Development
+
+- Run tests: `deno task test` (requires `--allow-read --allow-ffi --allow-env`
+  because `sharp` uses native bindings and reads fixtures).
 
 ## License
 

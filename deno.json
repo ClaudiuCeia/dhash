@@ -3,10 +3,22 @@
   "version": "0.2.0",
   "license": "MIT",
   "exports": "./mod.ts",
+  "nodeModulesDir": "auto",
+  "publish": {
+    "exclude": [
+      ".vscode",
+      "tests",
+      "coverage",
+      "node_modules",
+      "AGENTS.md"
+    ]
+  },
   "tasks": {
-    "test": "deno test --allow-net --allow-read --allow-ffi --allow-env"
+    "test": "deno test --allow-read --allow-ffi --allow-env"
   },
   "imports": {
-    "@std/path": "jsr:@std/path@^1.0.9"
+    "@std/assert": "jsr:@std/assert@^1.0.18",
+    "@std/path": "jsr:@std/path@^1.1.4",
+    "sharp": "npm:sharp@0.34.5"
   }
 }
