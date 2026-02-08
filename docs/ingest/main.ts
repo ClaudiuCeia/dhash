@@ -1,4 +1,4 @@
-import { dhash } from "../../mod.ts";
+import { dhash } from "dhash_jsr";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
