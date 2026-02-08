@@ -1,6 +1,9 @@
 import sharp from "sharp";
 import { normalize, resolve } from "@std/path";
 
+/**
+ * Options for {@link dhash}.
+ */
 export type DHashOptions = {
   /**
    * Flip the bit convention for left/right comparisons.
@@ -13,11 +16,29 @@ export type DHashOptions = {
 
 const MASK_64 = (1n << 64n) - 1n;
 
+/**
+ * Invert a 64-bit dHash (bitwise NOT), preserving leading zeroes.
+ *
+ * This is useful when matching the opposite bit convention used by other
+ * implementations.
+ */
 export const invertHash = (hash: string): string => {
   const v = BigInt("0x" + hash);
   return ((~v) & MASK_64).toString(16).padStart(16, "0");
 };
 
+/**
+ * Compute the 64-bit difference hash (dHash) for an image.
+ *
+ * Algorithm: grayscale -> resize to 9x8 -> compare adjacent pixels left-to-right
+ * to produce 64 bits -> return as 16-char hex string.
+ *
+ * Bit convention: by default, bit `1` means the intensity increases left-to-right
+ * (`left < right`). Use `options.invert` to flip this.
+ *
+ * @param pathOrSrc File path (relative to `Deno.cwd()`) or raw image bytes.
+ * @returns 16-character lowercase hex string.
+ */
 export const dhash = async (
   pathOrSrc: string | Uint8Array,
   options: DHashOptions = {},
@@ -51,6 +72,11 @@ export const dhash = async (
     .padStart(16, "0");
 };
 
+/**
+ * Compare two hex hashes by computing the Hamming distance.
+ *
+ * Lower is more similar, higher is more different.
+ */
 export const compare = (hash1: string, hash2: string): number => {
   if (hash1.length !== hash2.length) {
     throw new Error(`
@@ -65,6 +91,12 @@ export const compare = (hash1: string, hash2: string): number => {
   return xor.toString(2).split("1").length - 1;
 };
 
+/**
+ * Render a hash as an 8x8 ASCII/Unicode fingerprint.
+ *
+ * Always renders 64 bits (leading zeros preserved). Customize the output by
+ * changing the "off/on" character pair via `chars`.
+ */
 export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
   // Use BigInt to avoid precision loss; always render 64 bits (8x8).
   const bin = BigInt("0x" + hash).toString(2).padStart(64, "0");
@@ -78,6 +110,9 @@ export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
   return out;
 };
 
+/**
+ * Convert a hash into an 8x8 PNG (returned as bytes).
+ */
 export async function raw(hash: string): Promise<Uint8Array> {
   const bin = BigInt("0x" + hash).toString(2).padStart(64, "0");
 
@@ -94,6 +129,11 @@ export async function raw(hash: string): Promise<Uint8Array> {
   return await image.png().toBuffer();
 }
 
+/**
+ * Save an 8x8 PNG fingerprint for a hash to disk.
+ *
+ * Note: `.png` is appended to `filePath`.
+ */
 export async function save(hash: string, filePath: string): Promise<void> {
   const buffer = await raw(hash);
   await Deno.writeFile(`${filePath}.png`, buffer);
