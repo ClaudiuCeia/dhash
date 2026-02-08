@@ -22,6 +22,13 @@ Based on the
 ["Kind of Like That"](https://www.hackerfactor.com/blog/?/archives/529-Kind-of-Like-That.html)
 article by [Dr. Neal Krawetz](https://www.hackerfactor.com/about.php).
 
+## Demo
+
+Live demo (Deno Deploy): https://dhash.claudiuceia.deno.net/
+
+The demo source lives in `docs/` (`docs/main.tsx`, `docs/client.js`) and is
+deployed separately from the JSR package.
+
 ## Usage
 
 You can compare dhash values by simply computing the Hamming distance between
