@@ -8,6 +8,7 @@
     "exclude": [
       ".vscode",
       "tests",
+      "docs",
       "coverage",
       "node_modules",
       "AGENTS.md"
