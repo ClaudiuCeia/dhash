@@ -1,6 +1,11 @@
 name: Deploy Demo (Deno Deploy)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/deploy-demo.yml"
   release:
     types: [published]
   workflow_dispatch:
@@ -25,7 +30,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || inputs.ref }}
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
       - name: Setup Deno
         uses: denoland/setup-deno@v2
