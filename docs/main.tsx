@@ -67,6 +67,37 @@ function Page() {
           name="description"
           content="Upload up to 20 images, compute perceptual hashes (dHash), then sort by similarity."
         />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script
+          // deno-lint-ignore react-no-danger
+          dangerouslySetInnerHTML={{
+            __html: `
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        deno: {
+          50: "#ecfeff",
+          100: "#cffafe",
+          200: "#a5f3fc",
+          300: "#67e8f9",
+          400: "#22d3ee",
+          500: "#06b6d4",
+          600: "#0891b2",
+          700: "#0e7490",
+          800: "#155e75",
+          900: "#164e63"
+        }
+      },
+      boxShadow: {
+        soft: "0 12px 30px rgba(15, 23, 42, 0.08)",
+        soft2: "0 18px 45px rgba(15, 23, 42, 0.10)"
+      }
+    }
+  }
+};`,
+          }}
+        />
         <style
           // deno-lint-ignore react-no-danger
           dangerouslySetInnerHTML={{
@@ -75,82 +106,167 @@ function Page() {
         />
       </head>
       <body>
-        <main class="wrap">
-          <section class="card">
-            <header class="head">
-              <div>
-                <h1>dHash demo</h1>
-                <p class="muted">
-                  Upload up to <b>{MAX_FILES}</b> images (max <b>10MB</b>{" "}
-                  each), compute perceptual hashes, then sort by similarity
-                  (Hamming distance) to a reference image you choose by
+        <div class="relative overflow-hidden">
+          <div class="pointer-events-none absolute inset-0">
+            <div class="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl" />
+            <div class="absolute -right-24 -top-32 h-[28rem] w-[28rem] rounded-full bg-cyan-200/40 blur-3xl" />
+            <div class="absolute left-1/2 top-1/2 h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-200/30 blur-3xl" />
+          </div>
+
+          <main class="relative mx-auto w-full max-w-6xl px-4 py-10 sm:py-14">
+            <header class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                    dHash demo
+                  </h1>
+                  <span class="inline-flex items-center rounded-full border border-slate-200 bg-white/60 px-2 py-0.5 text-[11px] font-medium text-slate-600 shadow-sm">
+                    perceptual hashing
+                  </span>
+                </div>
+                <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+                  Upload up to{" "}
+                  <span class="font-semibold text-slate-900">{MAX_FILES}</span>
+                  {" "}
+                  images (max{" "}
+                  <span class="font-semibold text-slate-900">10MB</span>{" "}
+                  each). We compute 64-bit dHashes and sort by similarity
+                  (Hamming distance) to a reference image you select by
                   clicking.
                 </p>
               </div>
-              <nav class="links">
+              <nav class="flex shrink-0 items-center gap-2">
                 <a
                   href="https://github.com/ClaudiuCeia/dhash"
                   target="_blank"
                   rel="noreferrer"
-                  class="iconLink"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/70 text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
                   aria-label="GitHub repository"
+                  title="GitHub"
                 >
-                  <span class="icon" aria-hidden="true">{GitHubMark}</span>
+                  <span aria-hidden="true">{GitHubMark}</span>
                 </a>
                 <a
                   href="https://jsr.io/@claudiu-ceia/dhash"
                   target="_blank"
                   rel="noreferrer"
-                  class="iconLink"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/70 text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
                   aria-label="JSR package"
+                  title="JSR"
                 >
-                  <span class="icon" aria-hidden="true">{JSRMark}</span>
+                  <span aria-hidden="true">{JSRMark}</span>
                 </a>
               </nav>
             </header>
 
-            <div class="controls">
-              <input
-                id="files"
-                type="file"
-                accept="image/*"
-                multiple
-              />
-              <button id="clear" type="button" class="ghost" disabled>
-                Clear
-              </button>
-              <span id="status" class="muted" aria-live="polite" />
-            </div>
+            <section class="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
+              <div class="rounded-3xl border border-slate-200/70 bg-white/60 p-5 shadow-soft backdrop-blur sm:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <h2 class="text-base font-semibold text-slate-900">
+                      Upload images
+                    </h2>
+                    <p class="mt-1 text-xs text-slate-600">
+                      Hashes compute automatically after selection. Pending
+                      cards are disabled.
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      id="pick"
+                      type="button"
+                      class="inline-flex items-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                    >
+                      Choose images
+                    </button>
+                    <button
+                      id="clear"
+                      type="button"
+                      class="inline-flex items-center rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-sm font-medium text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                      disabled
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
 
-            <details class="about">
-              <summary>How it works</summary>
-              <div class="about-body">
-                <p>
-                  dHash converts an image to grayscale, resizes it to{" "}
-                  <code>9x8</code>, then compares each pixel to its neighbor on
-                  the right to produce <code>64</code>{" "}
-                  bits (a 16-char hex string). Similar images tend to have small
-                  Hamming distance between their hashes.
-                </p>
-                <p class="muted">
-                  This demo computes hashes on the server using{" "}
-                  <code>@claudiu-ceia/dhash</code>{" "}
-                  and keeps everything in memory (no persistence).
-                </p>
+                <input
+                  id="files"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  class="sr-only"
+                />
+
+                <div class="mt-4 flex flex-wrap items-center gap-3">
+                  <div class="inline-flex items-center rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-xs text-slate-700 shadow-sm">
+                    <span class="mr-2 inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                    <span id="fileLabel">No files selected</span>
+                  </div>
+                  <div class="text-xs text-slate-600">
+                    <span id="status" aria-live="polite" />
+                  </div>
+                </div>
+
+                <div id="errors" class="mt-4" />
+
+                <div
+                  id="grid"
+                  class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"
+                />
               </div>
-            </details>
 
-            <div id="errors" class="errors" />
-
-            <div class="legend muted">
-              Hashes compute automatically after you select files. Click any
-              computed card to set it as the reference image. Cards are sorted
-              by increasing distance.
-            </div>
-
-            <div id="grid" class="grid" />
-          </section>
-        </main>
+              <aside class="rounded-3xl border border-slate-200/70 bg-white/55 p-5 shadow-soft backdrop-blur sm:p-6">
+                <h2 class="text-base font-semibold text-slate-900">
+                  How it works
+                </h2>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                  dHash converts an image to grayscale, resizes it to{" "}
+                  <code class="rounded bg-slate-900/5 px-1 py-0.5 font-mono text-[0.85em] text-slate-900">
+                    9x8
+                  </code>, then compares each pixel to its neighbor on the
+                  right. The result is{" "}
+                  <span class="font-semibold text-slate-900">64 bits</span>{" "}
+                  (a 16-char hex string).
+                </p>
+                <div class="mt-4 rounded-2xl border border-slate-200 bg-white/65 p-4">
+                  <ul class="space-y-2 text-sm text-slate-700">
+                    <li class="flex gap-2">
+                      <span class="mt-[6px] inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                      <span>
+                        Similar images tend to have a small{" "}
+                        <span class="font-semibold text-slate-900">
+                          Hamming distance
+                        </span>{" "}
+                        between hashes.
+                      </span>
+                    </li>
+                    <li class="flex gap-2">
+                      <span class="mt-[6px] inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                      <span>
+                        Everything stays in memory (no persistence).
+                      </span>
+                    </li>
+                    <li class="flex gap-2">
+                      <span class="mt-[6px] inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
+                      <span>
+                        Click any computed card to set the reference image and
+                        re-sort.
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+                <p class="mt-4 text-xs text-slate-600">
+                  Computed server-side using{" "}
+                  <code class="rounded bg-slate-900/5 px-1 py-0.5 font-mono">
+                    @claudiu-ceia/dhash
+                  </code>{" "}
+                  on Deno Deploy.
+                </p>
+              </aside>
+            </section>
+          </main>
+        </div>
 
         <script
           type="module"
@@ -163,246 +279,11 @@ function Page() {
 }
 
 const CSS = `
-:root {
-  color-scheme: light;
-  --bg0: #f5f7ff;
-  --bg1: #f7fff4;
-  --ink: #0b1020;
-  --muted: #5a6175;
-  --card: rgba(255, 255, 255, 0.78);
-  --stroke: rgba(10, 16, 32, 0.12);
-  --stroke2: rgba(10, 16, 32, 0.08);
-  --shadow: 0 10px 30px rgba(11, 16, 32, 0.08);
-  --accent: #00dc82;
-}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-    Helvetica, Arial, sans-serif;
   margin: 0;
-  color: var(--ink);
-  background: radial-gradient(900px 600px at 15% 10%, var(--bg1), transparent
-        60%),
-    radial-gradient(900px 600px at 85% 0%, var(--bg0), transparent 60%),
-    linear-gradient(180deg, #ffffff, #fbfbff);
-}
-.wrap {
-  padding: 34px 18px;
-  display: grid;
-  place-items: start center;
-}
-.card {
-  width: min(1140px, calc(100vw - 36px));
-  border: 1px solid var(--stroke);
-  border-radius: 18px;
-  padding: 18px;
-  background: var(--card);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
-}
-.head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-h1 {
-  margin: 0 0 6px 0;
-  font-size: 24px;
-  letter-spacing: -0.02em;
-}
-p {
-  margin: 8px 0;
-  line-height: 1.45;
-}
-.muted {
-  color: var(--muted);
-  font-size: 12px;
-}
-.links {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.iconLink {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: 1px solid var(--stroke);
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 6px 14px rgba(11, 16, 32, 0.06);
-  text-decoration: none;
-}
-.iconLink:hover {
-  transform: translateY(-1px);
-  border-color: rgba(10, 16, 32, 0.18);
-}
-.icon {
-  width: 18px;
-  height: 18px;
-  display: inline-block;
-  color: var(--ink);
-}
-.controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-input[type="file"] {
-  max-width: 520px;
-}
-input[type="file"]::file-selector-button {
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--stroke);
-  background: rgba(255, 255, 255, 0.75);
-  cursor: pointer;
-  margin-right: 10px;
-  box-shadow: 0 6px 14px rgba(11, 16, 32, 0.06);
-}
-input[type="file"]::file-selector-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(10, 16, 32, 0.18);
-}
-button {
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--stroke);
-  background: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-}
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: rgba(10, 16, 32, 0.18);
-}
-button.ghost {
-  background: transparent;
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.errors {
-  margin-top: 10px;
-}
-.errors .err {
-  background: #fff3f3;
-  border: 1px solid #ffd2d2;
-  color: #7a0000;
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 12px;
-}
-.about {
-  margin-top: 12px;
-}
-.about summary {
-  cursor: pointer;
-  user-select: none;
-}
-.about-body {
-  margin-top: 8px;
-}
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
-  font-size: 0.95em;
-}
-.legend {
-  margin-top: 12px;
-}
-.grid {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
-}
-.item {
-  border: 1px solid var(--stroke2);
-  border-radius: 16px;
-  padding: 12px;
-  cursor: pointer;
-  display: grid;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.65);
-  box-shadow: 0 8px 18px rgba(11, 16, 32, 0.05);
-}
-.item:hover {
-  border-color: rgba(10, 16, 32, 0.18);
-}
-.item.anchor {
-  border-color: rgba(0, 220, 130, 0.85);
-  box-shadow: 0 12px 30px rgba(0, 220, 130, 0.18);
-}
-.item.pending {
-  opacity: 0.55;
-  cursor: default;
-}
-.row {
-  display: grid;
-  grid-template-columns: 96px 96px 1fr;
-  align-items: start;
-  gap: 10px;
-}
-.thumb {
-  width: 96px;
-  height: 96px;
-  object-fit: cover;
-  border-radius: 14px;
-  border: 1px solid var(--stroke2);
-  background: rgba(10, 16, 32, 0.04);
-}
-.hashCanvas {
-  width: 96px;
-  height: 96px;
-  border-radius: 14px;
-  border: 1px solid var(--stroke2);
-  background: rgba(10, 16, 32, 0.04);
-}
-.meta {
-  flex: 1;
-  min-width: 0;
-}
-.name {
-  font-size: 13px;
-  font-weight: 700;
-  color: #111;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.kv {
-  display: grid;
-  grid-template-columns: 84px 1fr;
-  gap: 6px 8px;
-  margin-top: 6px;
-  font-size: 12px;
-}
-.k {
-  color: #6b7280;
-}
-.v {
-  color: #111;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.badge {
-  display: inline-block;
-  font-size: 11px;
-  border: 1px solid rgba(0, 220, 130, 0.9);
-  color: #0b3d27;
-  border-radius: 999px;
-  padding: 2px 8px;
-  margin-top: 8px;
-  background: rgba(0, 220, 130, 0.16);
+  background: #ffffff;
 }
 `;
 
@@ -412,10 +293,12 @@ const MAX_BYTES = ${MAX_BYTES};
 const CONCURRENCY = 3;
 
 const filesEl = document.getElementById("files");
+const pickEl = document.getElementById("pick");
 const clearEl = document.getElementById("clear");
 const statusEl = document.getElementById("status");
 const gridEl = document.getElementById("grid");
 const errorsEl = document.getElementById("errors");
+const fileLabelEl = document.getElementById("fileLabel");
 
 /** @type {{file: File, url: string, name: string, size: number, type: string, hash?: string, distance?: number, err?: string, inFlight?: boolean}[]} */
 let items = [];
@@ -426,7 +309,7 @@ let controllers = [];
 
 function setStatus(s) { statusEl.textContent = s; }
 function setError(msg) {
-  errorsEl.innerHTML = msg ? '<div class="err">' + escapeHtml(msg) + '</div>' : '';
+  errorsEl.innerHTML = msg ? '<div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 shadow-sm">' + escapeHtml(msg) + '</div>' : '';
 }
 function escapeHtml(s) {
   const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -437,6 +320,10 @@ function cancelInFlight() {
   for (const c of controllers) c.abort();
   controllers = [];
 }
+
+pickEl.addEventListener("click", () => {
+  filesEl.click();
+});
 
 filesEl.addEventListener("change", () => {
   setError("");
@@ -453,6 +340,7 @@ filesEl.addEventListener("change", () => {
   const list = Array.from(filesEl.files || []);
   if (list.length === 0) {
     clearEl.disabled = true;
+    fileLabelEl.textContent = "No files selected";
     return;
   }
 
@@ -471,6 +359,7 @@ filesEl.addEventListener("change", () => {
   }
 
   clearEl.disabled = false;
+  fileLabelEl.textContent = items.length + " image(s) selected";
   if (skipped > 0) {
     msg += (msg ? " " : "") + skipped + " file(s) were >10MB and were skipped.";
   }
@@ -490,6 +379,7 @@ clearEl.addEventListener("click", () => {
   setStatus("");
   setError("");
   clearEl.disabled = true;
+  fileLabelEl.textContent = "No files selected";
 });
 
 function popcountBigInt(x) {
@@ -633,9 +523,14 @@ function render() {
   for (const { it, idx } of sorted) {
     const div = document.createElement("div");
     const pending = !it.hash;
-    div.className = "item" +
-      (idx === anchor ? " anchor" : "") +
-      (pending ? " pending" : "");
+    const base = "group relative rounded-2xl border bg-white/75 p-4 shadow-sm backdrop-blur transition";
+    const active = pending
+      ? " opacity-50 cursor-not-allowed border-slate-200"
+      : " cursor-pointer border-slate-200 hover:-translate-y-0.5 hover:shadow-md";
+    const anchored = (idx === anchor)
+      ? " ring-2 ring-emerald-300 border-emerald-200 shadow-[0_18px_45px_rgba(16,185,129,0.18)]"
+      : "";
+    div.className = base + active + anchored;
 
     if (!pending) {
       div.addEventListener("click", () => {
@@ -646,15 +541,15 @@ function render() {
     }
 
     const row = document.createElement("div");
-    row.className = "row";
+    row.className = "flex items-start gap-3";
 
     const img = document.createElement("img");
-    img.className = "thumb";
+    img.className = "h-24 w-24 shrink-0 rounded-xl border border-slate-200 bg-slate-50 object-cover";
     img.src = it.url;
     img.alt = it.name;
 
     const canvas = document.createElement("canvas");
-    canvas.className = "hashCanvas";
+    canvas.className = "h-24 w-24 shrink-0 rounded-xl border border-slate-200 bg-slate-50";
     canvas.width = 96;
     canvas.height = 96;
     if (it.hash) drawHash(canvas, it.hash);
@@ -663,25 +558,29 @@ function render() {
     row.appendChild(canvas);
 
     const meta = document.createElement("div");
-    meta.className = "meta";
+    meta.className = "min-w-0 flex-1";
 
     const name = document.createElement("div");
-    name.className = "name";
+    name.className = "truncate text-sm font-semibold text-slate-900";
     name.textContent = it.name;
     meta.appendChild(name);
 
     const kv = document.createElement("div");
-    kv.className = "kv";
+    kv.className = "mt-2 grid grid-cols-[56px_1fr] gap-x-3 gap-y-2 text-xs";
 
     kv.innerHTML =
-      '<div class="k">hash</div><div class="v">' + escapeHtml(it.hash || (it.err ? "error" : (it.inFlight ? "computing..." : "-"))) + '</div>' +
-      '<div class="k">diff</div><div class="v">' + escapeHtml(String(Number.isFinite(it.distance) ? it.distance : "-")) + '</div>';
+      '<div class="text-slate-500">hash</div><div class="font-mono text-slate-900 truncate">' +
+      escapeHtml(it.hash || (it.err ? "error" : (it.inFlight ? "computing..." : "-"))) +
+      '</div>' +
+      '<div class="text-slate-500">diff</div><div class="font-mono text-slate-900">' +
+      escapeHtml(String(Number.isFinite(it.distance) ? it.distance : "-")) +
+      "</div>";
 
     meta.appendChild(kv);
 
     if (idx === anchor) {
       const badge = document.createElement("div");
-      badge.className = "badge";
+      badge.className = "mt-3 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800";
       badge.textContent = "reference";
       meta.appendChild(badge);
     }
