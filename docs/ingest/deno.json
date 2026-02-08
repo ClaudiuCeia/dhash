@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.3.2"
+  }
+}
