@@ -27,6 +27,35 @@ function html(body: string, status = 200): Response {
   });
 }
 
+const GitHubMark = (
+  <svg
+    viewBox="0 0 16 16"
+    width="16"
+    height="16"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+  </svg>
+);
+
+const JSRMark = (
+  <svg
+    viewBox="0 -3 13 13"
+    width="18"
+    height="18"
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M0,2h2v-2h7v1h4v4h-2v2h-7v-1h-4" fill="#083344" />
+    <g fill="#f7df1e">
+      <path d="M1,3h1v1h1v-3h1v4h-3" />
+      <path d="M5,1h3v1h-2v1h2v3h-3v-1h2v-1h-2" />
+      <path d="M9,2h3v2h-1v-1h-1v3h-1" />
+    </g>
+  </svg>
+);
+
 function Page() {
   return (
     <html lang="en">
@@ -34,6 +63,10 @@ function Page() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>dHash demo</title>
+        <meta
+          name="description"
+          content="Upload up to 20 images, compute perceptual hashes (dHash), then sort by similarity."
+        />
         <style
           // deno-lint-ignore react-no-danger
           dangerouslySetInnerHTML={{
@@ -59,15 +92,19 @@ function Page() {
                   href="https://github.com/ClaudiuCeia/dhash"
                   target="_blank"
                   rel="noreferrer"
+                  class="iconLink"
+                  aria-label="GitHub repository"
                 >
-                  GitHub
+                  <span class="icon" aria-hidden="true">{GitHubMark}</span>
                 </a>
                 <a
                   href="https://jsr.io/@claudiu-ceia/dhash"
                   target="_blank"
                   rel="noreferrer"
+                  class="iconLink"
+                  aria-label="JSR package"
                 >
-                  JSR
+                  <span class="icon" aria-hidden="true">{JSRMark}</span>
                 </a>
               </nav>
             </header>
@@ -79,13 +116,10 @@ function Page() {
                 accept="image/*"
                 multiple
               />
-              <button id="compute" type="button" disabled>
-                Compute hashes
-              </button>
               <button id="clear" type="button" class="ghost" disabled>
                 Clear
               </button>
-              <span id="status" class="muted" />
+              <span id="status" class="muted" aria-live="polite" />
             </div>
 
             <details class="about">
@@ -109,7 +143,8 @@ function Page() {
             <div id="errors" class="errors" />
 
             <div class="legend muted">
-              Click any card to set it as the reference image. Cards are sorted
+              Hashes compute automatically after you select files. Click any
+              computed card to set it as the reference image. Cards are sorted
               by increasing distance.
             </div>
 
@@ -128,65 +163,279 @@ function Page() {
 }
 
 const CSS = `
-:root { color-scheme: light; }
-body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; }
-.wrap { padding: 28px; display: grid; place-items: start center; }
-.card { width: min(1120px, calc(100vw - 56px)); border: 1px solid #ddd; border-radius: 14px; padding: 18px; background: #fff; }
-.head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-h1 { margin: 0 0 6px 0; font-size: 22px; letter-spacing: -0.01em; }
-p { margin: 8px 0; line-height: 1.45; }
-.muted { color: #555; font-size: 12px; }
-.links { display: flex; gap: 12px; align-items: center; }
-.links a { color: #111; text-decoration: none; border-bottom: 1px dotted #bbb; }
-.links a:hover { border-bottom-style: solid; }
-.controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
-input[type=file] { max-width: 460px; }
-button { padding: 8px 12px; border-radius: 10px; border: 1px solid #bbb; background: #f7f7f7; cursor: pointer; }
-button.ghost { background: transparent; }
-button:disabled { opacity: 0.6; cursor: not-allowed; }
-.errors { margin-top: 10px; }
-.errors .err { background: #fff3f3; border: 1px solid #ffd2d2; color: #7a0000; padding: 10px; border-radius: 10px; font-size: 12px; }
-.about { margin-top: 12px; }
-.about summary { cursor: pointer; user-select: none; }
-.about-body { margin-top: 8px; }
-code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.95em; }
-.legend { margin-top: 12px; }
-.grid { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-.item { border: 1px solid #e1e1e1; border-radius: 12px; padding: 10px; cursor: pointer; display: grid; gap: 10px; }
-.item:hover { border-color: #bbb; }
-.item.anchor { border-color: #111; }
-.row { display: flex; align-items: flex-start; gap: 10px; }
-.thumb { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; background: #f3f3f3; }
-.hashCanvas { width: 96px; height: 96px; border-radius: 10px; border: 1px solid #ddd; background: #f3f3f3; }
-.meta { flex: 1; min-width: 0; }
-.name { font-size: 13px; font-weight: 600; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kv { display: grid; grid-template-columns: 84px 1fr; gap: 6px 8px; margin-top: 6px; font-size: 12px; }
-.k { color: #666; }
-.v { color: #111; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.badge { display: inline-block; font-size: 11px; border: 1px solid #111; border-radius: 999px; padding: 2px 8px; margin-top: 6px; }
+:root {
+  color-scheme: light;
+  --bg0: #f5f7ff;
+  --bg1: #f7fff4;
+  --ink: #0b1020;
+  --muted: #5a6175;
+  --card: rgba(255, 255, 255, 0.78);
+  --stroke: rgba(10, 16, 32, 0.12);
+  --stroke2: rgba(10, 16, 32, 0.08);
+  --shadow: 0 10px 30px rgba(11, 16, 32, 0.08);
+  --accent: #00dc82;
+}
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+    Helvetica, Arial, sans-serif;
+  margin: 0;
+  color: var(--ink);
+  background: radial-gradient(900px 600px at 15% 10%, var(--bg1), transparent
+        60%),
+    radial-gradient(900px 600px at 85% 0%, var(--bg0), transparent 60%),
+    linear-gradient(180deg, #ffffff, #fbfbff);
+}
+.wrap {
+  padding: 34px 18px;
+  display: grid;
+  place-items: start center;
+}
+.card {
+  width: min(1140px, calc(100vw - 36px));
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  padding: 18px;
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+}
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+h1 {
+  margin: 0 0 6px 0;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+p {
+  margin: 8px 0;
+  line-height: 1.45;
+}
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+.links {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.iconLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 14px rgba(11, 16, 32, 0.06);
+  text-decoration: none;
+}
+.iconLink:hover {
+  transform: translateY(-1px);
+  border-color: rgba(10, 16, 32, 0.18);
+}
+.icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  color: var(--ink);
+}
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+input[type="file"] {
+  max-width: 520px;
+}
+input[type="file"]::file-selector-button {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  margin-right: 10px;
+  box-shadow: 0 6px 14px rgba(11, 16, 32, 0.06);
+}
+input[type="file"]::file-selector-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(10, 16, 32, 0.18);
+}
+button {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(10, 16, 32, 0.18);
+}
+button.ghost {
+  background: transparent;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.errors {
+  margin-top: 10px;
+}
+.errors .err {
+  background: #fff3f3;
+  border: 1px solid #ffd2d2;
+  color: #7a0000;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+.about {
+  margin-top: 12px;
+}
+.about summary {
+  cursor: pointer;
+  user-select: none;
+}
+.about-body {
+  margin-top: 8px;
+}
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+}
+.legend {
+  margin-top: 12px;
+}
+.grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.item {
+  border: 1px solid var(--stroke2);
+  border-radius: 16px;
+  padding: 12px;
+  cursor: pointer;
+  display: grid;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 8px 18px rgba(11, 16, 32, 0.05);
+}
+.item:hover {
+  border-color: rgba(10, 16, 32, 0.18);
+}
+.item.anchor {
+  border-color: rgba(0, 220, 130, 0.85);
+  box-shadow: 0 12px 30px rgba(0, 220, 130, 0.18);
+}
+.item.pending {
+  opacity: 0.55;
+  cursor: default;
+}
+.row {
+  display: grid;
+  grid-template-columns: 96px 96px 1fr;
+  align-items: start;
+  gap: 10px;
+}
+.thumb {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid var(--stroke2);
+  background: rgba(10, 16, 32, 0.04);
+}
+.hashCanvas {
+  width: 96px;
+  height: 96px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke2);
+  background: rgba(10, 16, 32, 0.04);
+}
+.meta {
+  flex: 1;
+  min-width: 0;
+}
+.name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kv {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 6px 8px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.k {
+  color: #6b7280;
+}
+.v {
+  color: #111;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  border: 1px solid rgba(0, 220, 130, 0.9);
+  color: #0b3d27;
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-top: 8px;
+  background: rgba(0, 220, 130, 0.16);
+}
 `;
 
 const JS = `
 const MAX_FILES = ${MAX_FILES};
 const MAX_BYTES = ${MAX_BYTES};
+const CONCURRENCY = 3;
 
 const filesEl = document.getElementById("files");
-const computeEl = document.getElementById("compute");
 const clearEl = document.getElementById("clear");
 const statusEl = document.getElementById("status");
 const gridEl = document.getElementById("grid");
 const errorsEl = document.getElementById("errors");
 
-/** @type {{file: File, url: string, name: string, size: number, type: string, hash?: string, distance?: number}[]} */
+/** @type {{file: File, url: string, name: string, size: number, type: string, hash?: string, distance?: number, err?: string, inFlight?: boolean}[]} */
 let items = [];
 let anchor = 0;
+let runId = 0;
+/** @type {AbortController[]} */
+let controllers = [];
 
 function setStatus(s) { statusEl.textContent = s; }
 function setError(msg) {
   errorsEl.innerHTML = msg ? '<div class="err">' + escapeHtml(msg) + '</div>' : '';
 }
 function escapeHtml(s) {
-  return String(s).replace(/[&<>\"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));
+  const m = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  return String(s).replace(/[&<>"']/g, (c) => m[c]);
+}
+
+function cancelInFlight() {
+  for (const c of controllers) c.abort();
+  controllers = [];
 }
 
 filesEl.addEventListener("change", () => {
@@ -194,6 +443,8 @@ filesEl.addEventListener("change", () => {
   setStatus("");
   gridEl.innerHTML = "";
   anchor = 0;
+  runId++;
+  cancelInFlight();
 
   // Revoke old URLs
   for (const it of items) URL.revokeObjectURL(it.url);
@@ -201,34 +452,36 @@ filesEl.addEventListener("change", () => {
 
   const list = Array.from(filesEl.files || []);
   if (list.length === 0) {
-    computeEl.disabled = true;
     clearEl.disabled = true;
     return;
   }
 
+  let msg = "";
   if (list.length > MAX_FILES) {
-    setError('Too many files. Max is ' + MAX_FILES + '.');
-    computeEl.disabled = true;
-    clearEl.disabled = false;
-    return;
+    msg = "Too many files selected. Only the first " + MAX_FILES + " will be used.";
   }
 
-  for (const f of list) {
+  let skipped = 0;
+  for (const f of list.slice(0, MAX_FILES)) {
     if (f.size > MAX_BYTES) {
-      setError('File too large: ' + f.name + ' (max 10MB).');
-      computeEl.disabled = true;
-      clearEl.disabled = false;
-      return;
+      skipped++;
+      continue;
     }
     items.push({ file: f, url: URL.createObjectURL(f), name: f.name, size: f.size, type: f.type });
   }
 
-  computeEl.disabled = false;
   clearEl.disabled = false;
+  if (skipped > 0) {
+    msg += (msg ? " " : "") + skipped + " file(s) were >10MB and were skipped.";
+  }
+  if (msg) setError(msg);
   render();
+  void computeAll(runId);
 });
 
 clearEl.addEventListener("click", () => {
+  runId++;
+  cancelInFlight();
   filesEl.value = "";
   for (const it of items) URL.revokeObjectURL(it.url);
   items = [];
@@ -236,37 +489,7 @@ clearEl.addEventListener("click", () => {
   gridEl.innerHTML = "";
   setStatus("");
   setError("");
-  computeEl.disabled = true;
   clearEl.disabled = true;
-});
-
-computeEl.addEventListener("click", async () => {
-  setError("");
-  setStatus("Uploading...");
-  computeEl.disabled = true;
-
-  try {
-    const fd = new FormData();
-    for (const it of items) fd.append("images", it.file, it.name);
-
-    const res = await fetch("/api/hash", { method: "POST", body: fd });
-    const data = await res.json().catch(() => null);
-    if (!res.ok) throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status));
-    if (!data || !Array.isArray(data.items)) throw new Error("Bad response from server.");
-
-    for (let i = 0; i < items.length; i++) {
-      items[i].hash = data.items[i] && data.items[i].hash;
-    }
-
-    setStatus("Computed " + items.length + " hashes. Click a card to set reference.");
-    recomputeDistances();
-    render();
-  } catch (e) {
-    setError(String(e && e.message ? e.message : e));
-    setStatus("");
-  } finally {
-    computeEl.disabled = false;
-  }
 });
 
 function popcountBigInt(x) {
@@ -292,12 +515,86 @@ function recomputeDistances() {
 function sortByDistance() {
   const withIndex = items.map((it, idx) => ({ it, idx }));
   withIndex.sort((a, b) => {
-    const da = (a.it.distance ?? Number.POSITIVE_INFINITY);
-    const db = (b.it.distance ?? Number.POSITIVE_INFINITY);
+    const da = (Number.isFinite(a.it.distance) ? a.it.distance : Number.POSITIVE_INFINITY);
+    const db = (Number.isFinite(b.it.distance) ? b.it.distance : Number.POSITIVE_INFINITY);
     if (da !== db) return da - db;
     return a.idx - b.idx;
   });
   return withIndex;
+}
+
+async function computeOne(it) {
+  const c = new AbortController();
+  controllers.push(c);
+
+  const buf = await it.file.arrayBuffer();
+  const res = await fetch("/hash", {
+    method: "POST",
+    headers: { "content-type": "application/octet-stream" },
+    body: buf,
+    signal: c.signal,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const msg = (data && data.error) ? data.error : ("HTTP " + res.status);
+    throw new Error(msg);
+  }
+  if (!data || typeof data.hash !== "string") throw new Error("Bad response from server.");
+  return data.hash;
+}
+
+async function computeAll(localRun) {
+  const total = items.length;
+  if (total === 0) return;
+
+  setStatus("Computing hashes...");
+
+  let done = 0;
+  let next = 0;
+
+  const workerCount = Math.min(CONCURRENCY, total);
+  async function worker() {
+    while (true) {
+      const i = next++;
+      if (i >= total) return;
+      if (localRun !== runId) return;
+
+      const it = items[i];
+      if (it.hash || it.err) {
+        done++;
+        continue;
+      }
+
+      it.inFlight = true;
+      render();
+
+      try {
+        it.hash = await computeOne(it);
+      } catch (e) {
+        if (e && typeof e === "object" && e.name === "AbortError") return;
+        it.err = String(e && e.message ? e.message : e);
+      } finally {
+        it.inFlight = false;
+        done++;
+        if (localRun !== runId) return;
+
+        const computed = items.filter((x) => !!x.hash).length;
+        setStatus("Computed " + computed + " / " + items.length + " hashes...");
+        recomputeDistances();
+        render();
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  if (localRun !== runId) return;
+  const computed = items.filter((x) => !!x.hash).length;
+  if (computed === items.length) {
+    setStatus("Computed " + computed + " hashes. Click a card to set reference.");
+  } else {
+    setStatus("Computed " + computed + " hashes. Some files failed.");
+  }
 }
 
 function drawHash(canvas, hash) {
@@ -335,13 +632,18 @@ function render() {
 
   for (const { it, idx } of sorted) {
     const div = document.createElement("div");
-    div.className = "item" + (idx === anchor ? " anchor" : "");
+    const pending = !it.hash;
+    div.className = "item" +
+      (idx === anchor ? " anchor" : "") +
+      (pending ? " pending" : "");
 
-    div.addEventListener("click", () => {
-      anchor = idx;
-      recomputeDistances();
-      render();
-    });
+    if (!pending) {
+      div.addEventListener("click", () => {
+        anchor = idx;
+        recomputeDistances();
+        render();
+      });
+    }
 
     const row = document.createElement("div");
     row.className = "row";
@@ -372,8 +674,8 @@ function render() {
     kv.className = "kv";
 
     kv.innerHTML =
-      '<div class=\"k\">hash</div><div class=\"v\">' + escapeHtml(it.hash || '-') + '</div>' +
-      '<div class=\"k\">diff</div><div class=\"v\">' + escapeHtml(String(it.distance ?? '-')) + '</div>';
+      '<div class="k">hash</div><div class="v">' + escapeHtml(it.hash || (it.err ? "error" : (it.inFlight ? "computing..." : "-"))) + '</div>' +
+      '<div class="k">diff</div><div class="v">' + escapeHtml(String(Number.isFinite(it.distance) ? it.distance : "-")) + '</div>';
 
     meta.appendChild(kv);
 
