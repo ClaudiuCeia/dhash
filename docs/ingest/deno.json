@@ -1,5 +1,10 @@
 {
+  "nodeModulesDir": "auto",
   "imports": {
     "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.3.2"
+  },
+  "deploy": {
+    "org": "claudiuceia",
+    "app": "short-rook-18"
   }
 }
