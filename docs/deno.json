@@ -1,0 +1,16 @@
+{
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "imports": {
+    "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.3.2",
+    "preact": "npm:preact@10.28.3",
+    "preact-render-to-string": "npm:preact-render-to-string@6.6.5"
+  },
+  "deploy": {
+    "org": "claudiuceia",
+    "app": "dhash"
+  }
+}
