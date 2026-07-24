@@ -51,10 +51,12 @@ try {
   );
   await Deno.writeTextFile(
     `${directory}/consumer.ts`,
-    `import { type DHashOptions, dhash } from "${packageName}";
+    `import { type DHashOptions, dhash, toAscii } from "${packageName}";
 const options: DHashOptions = { invert: true };
 const hash: Promise<string> = dhash(new Uint8Array(), options);
+const ascii: string = toAscii("0", [".", "#"]);
 void hash;
+void ascii;
 `,
   );
   await Deno.writeTextFile(

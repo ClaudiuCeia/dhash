@@ -92,10 +92,9 @@ export const compare = (hash1: string, hash2: string): number => {
   const b = parseHash(hash2);
 
   if (hash1.length !== hash2.length) {
-    throw new Error(`
-        Hashes should be of the same length.
-        Got ${hash1} of ${hash1.length} and ${hash2} of ${hash2.length}
-    `);
+    throw new Error(
+      `Hashes must have the same length. Got "${hash1}" (${hash1.length}) and "${hash2}" (${hash2.length}).`,
+    );
   }
   const xor = a ^ b;
 
@@ -108,7 +107,10 @@ export const compare = (hash1: string, hash2: string): number => {
  * Always renders 64 bits (leading zeros preserved). Customize the output by
  * changing the "off/on" character pair via `chars`.
  */
-export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
+export const toAscii = (
+  hash: string,
+  chars: readonly [off: string, on: string] = ["░░", "██"],
+): string => {
   // Use BigInt to avoid precision loss; always render 64 bits (8x8).
   const bin = parseHash(hash).toString(2).padStart(64, "0");
   let out = "";

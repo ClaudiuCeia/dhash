@@ -1,13 +1,7 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
+import { resolve } from "node:path";
 import sharp from "sharp";
-import {
-  compare,
-  dhash,
-  invertHash,
-  raw,
-  save,
-  toAscii,
-} from "../src/dhash.ts";
+import { compare, dhash, invertHash, raw, save, toAscii } from "../mod.ts";
 
 Deno.test("sample", async () => {
   assertEquals(await dhash("./tests/dalle.png"), "7735ac8c2da4746c");
@@ -24,12 +18,9 @@ Deno.test("dhash invert matches invertHash()", async () => {
 });
 
 Deno.test("dhash throws for missing files", async () => {
-  try {
-    await dhash("./tests/__does_not_exist__.png");
-    throw new Error("expected dhash to throw");
-  } catch (err) {
-    assertEquals(err instanceof Error, true);
-  }
+  const path = resolve("./tests/__does_not_exist__.png");
+  const error = await assertRejects(() => dhash(path), Error);
+  assertEquals(error.message, `Failed to open "${path}"`);
 });
 
 Deno.test("comparison", async () => {
@@ -95,13 +86,11 @@ Deno.test("toAscii supports custom characters", () => {
 });
 
 Deno.test("compare throws on different length hashes", () => {
-  try {
-    compare("00", "0000");
-    throw new Error("expected compare to throw");
-  } catch (err) {
-    // Just ensure it throws; message formatting isn't part of the contract.
-    assertEquals(err instanceof Error, true);
-  }
+  const error = assertThrows(() => compare("00", "0000"), Error);
+  assertEquals(
+    error.message,
+    'Hashes must have the same length. Got "00" (2) and "0000" (4).',
+  );
 });
 
 Deno.test("hash APIs reject invalid 64-bit hex values", async () => {
@@ -109,10 +98,19 @@ Deno.test("hash APIs reject invalid 64-bit hex values", async () => {
   const message = "Hash must contain 1 to 16 hexadecimal characters.";
 
   for (const hash of invalidHashes) {
-    assertThrows(() => invertHash(hash), TypeError, message);
-    assertThrows(() => compare(hash, hash), TypeError, message);
-    assertThrows(() => toAscii(hash), TypeError, message);
-    await assertRejects(() => raw(hash), TypeError, message);
+    assertEquals(
+      assertThrows(() => invertHash(hash), TypeError).message,
+      message,
+    );
+    assertEquals(
+      assertThrows(() => compare(hash, hash), TypeError).message,
+      message,
+    );
+    assertEquals(assertThrows(() => toAscii(hash), TypeError).message, message);
+    assertEquals(
+      (await assertRejects(() => raw(hash), TypeError)).message,
+      message,
+    );
   }
 });
 
