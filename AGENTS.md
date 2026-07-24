@@ -54,10 +54,9 @@ function/type, export it from `mod.ts` and add/adjust tests under `tests/`.
 - Bump `version` in `deno.json`.
 - Validate locally: `deno fmt`, `deno lint`, `deno task test`.
 - Preview package contents: `deno publish --dry-run`.
-- Preview the npm package: `deno pack --dry-run --ignore=deno.lock`.
+- Build the npm package: `deno task pack:npm`.
 - Publish to JSR: `deno publish` (auth via token/login).
-- Publish to npm: `deno pack --ignore=deno.lock --output dhash.tgz` then
-  `npm publish dhash.tgz --access public`.
+- Publish to npm: `deno task pack:npm` then `npm publish dhash.tgz`.
 - CI publish: push a semver tag matching `deno.json`’s version (e.g. `v0.2.0`).
   GitHub Actions will run checks, publish to JSR via its tokenless GitHub
   Actions flow (OIDC), and publish to npm via trusted publishing (OIDC). Both

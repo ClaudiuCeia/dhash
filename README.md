@@ -89,7 +89,7 @@ preserved.
   native bindings, reads fixtures, and the `save()` test writes to a temporary
   directory).
 - Preview the JSR package: `deno publish --dry-run`.
-- Preview the npm package: `deno pack --dry-run --ignore=deno.lock`.
+- Build the npm package: `deno task pack:npm`.
 
 ## License
 

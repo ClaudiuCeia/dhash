@@ -57,7 +57,7 @@ jobs:
         run: deno task check:npm
 
       - name: Pack npm package
-        run: deno pack --ignore=deno.lock --output dhash.tgz
+        run: deno task pack:npm
 
       - name: Publish to npm
         shell: bash

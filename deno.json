@@ -17,9 +17,10 @@
     ]
   },
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check mod.ts scripts/test_npm.ts && deno check --config docs/deno.json docs/main.ts && deno task test",
+    "check": "deno fmt --check && deno lint && deno check mod.ts scripts/pack_npm.ts scripts/test_npm.ts && deno check --config docs/deno.json docs/main.ts && deno task test",
     "check:npm": "deno run -A scripts/test_npm.ts",
-    "check:ts7": "deno check --unstable-tsgo mod.ts scripts/test_npm.ts && deno check --unstable-tsgo --config docs/deno.json docs/main.ts && deno test --unstable-tsgo --allow-read --allow-write --allow-ffi --allow-env",
+    "check:ts7": "deno check --unstable-tsgo mod.ts scripts/pack_npm.ts scripts/test_npm.ts && deno check --unstable-tsgo --config docs/deno.json docs/main.ts && deno test --unstable-tsgo --allow-read --allow-write --allow-ffi --allow-env",
+    "pack:npm": "deno run -A scripts/pack_npm.ts",
     "test": "deno test --allow-read --allow-write --allow-ffi --allow-env"
   },
   "imports": {

@@ -32,7 +32,12 @@ const archive = `${directory}/dhash.tgz`;
 try {
   await run(
     Deno.execPath(),
-    ["pack", "--allow-dirty", "--ignore=deno.lock", "--output", archive],
+    [
+      "run",
+      "-A",
+      fileURLToPath(new URL("./pack_npm.ts", import.meta.url)),
+      archive,
+    ],
     Deno.cwd(),
   );
 
@@ -67,6 +72,19 @@ void hash;
   );
 
   await run(npm, ["install", "--no-audit", "--no-fund", archive], directory);
+  const installedPackage = JSON.parse(
+    await Deno.readTextFile(
+      `${directory}/node_modules/@claudiu-ceia/dhash/package.json`,
+    ),
+  );
+  if (
+    installedPackage.engines?.node !== ">=22" ||
+    installedPackage.repository?.url !==
+      "git+https://github.com/ClaudiuCeia/dhash.git" ||
+    !installedPackage.keywords?.includes("perceptual-hash")
+  ) {
+    throw new Error("Packed npm metadata is incomplete.");
+  }
   await run(npm, ["audit", "--omit=dev", "--audit-level=high"], directory);
   await run(
     npx,
