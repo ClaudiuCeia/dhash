@@ -1,0 +1,70 @@
+name: Publish npm
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+      - "*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish (e.g. v0.5.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-npm-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+          registry-url: https://registry.npmjs.org
+
+      - name: Verify tag matches deno.json version
+        shell: bash
+        run: |
+          raw_tag="${{ inputs.tag || github.ref_name }}"
+          tag="${raw_tag#v}"
+          version="$(deno eval "console.log(JSON.parse(Deno.readTextFileSync('deno.json')).version)")"
+
+          if [[ "${tag}" != "${version}" ]]; then
+            echo "Tag (${raw_tag}) does not match deno.json version (${version})."
+            exit 1
+          fi
+
+      - name: Check npm package
+        run: deno task check:npm
+
+      - name: Pack npm package
+        run: deno pack --ignore=deno.lock --output dhash.tgz
+
+      - name: Publish to npm
+        shell: bash
+        run: |
+          version="$(deno eval "console.log(JSON.parse(Deno.readTextFileSync('deno.json')).version)")"
+          if npm view "@claudiu-ceia/dhash@${version}" version >/dev/null 2>&1; then
+            echo "@claudiu-ceia/dhash@${version} is already published to npm."
+          else
+            npm publish dhash.tgz --access public
+          fi

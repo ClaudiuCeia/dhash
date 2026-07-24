@@ -60,8 +60,7 @@ function/type, export it from `mod.ts` and add/adjust tests under `tests/`.
   `npm publish dhash.tgz --access public`.
 - CI publish: push a semver tag matching `deno.json`’s version (e.g. `v0.2.0`).
   GitHub Actions will run checks, publish to JSR via its tokenless GitHub
-  Actions flow (OIDC), and publish to npm using the `NPM_TOKEN` repository
-  secret. JSR publishing requires linking the package to this GitHub repo in the
-  JSR package settings.
+  Actions flow (OIDC), and publish to npm via trusted publishing (OIDC). Both
+  registries must trust this GitHub repository and their respective workflow.
 - CI also creates a GitHub Release for the tag using release notes generated
   from the git log since the previous `v*` tag.
