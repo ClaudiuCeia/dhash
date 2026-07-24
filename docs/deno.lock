@@ -1,14 +1,14 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@claudiu-ceia/dhash@0.4": "0.4.0",
+    "jsr:@claudiu-ceia/dhash@0.5": "0.5.0",
     "npm:preact-render-to-string@6.7.0": "6.7.0_preact@10.29.7",
     "npm:preact@10.29.7": "10.29.7_preact-render-to-string@6.7.0",
     "npm:sharp@0.35.3": "0.35.3"
   },
   "jsr": {
-    "@claudiu-ceia/dhash@0.4.0": {
-      "integrity": "9d3abe40d23d1a008a8bc421e565b719e6bb688da5b27ecfe46ca2c9b6f48203",
+    "@claudiu-ceia/dhash@0.5.0": {
+      "integrity": "86434256c84078f30ffe9c3fb2fe4aaa972eb2bf26cd0438455b1bef597ed387",
       "dependencies": [
         "npm:sharp"
       ]
@@ -252,7 +252,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@claudiu-ceia/dhash@0.4",
+      "jsr:@claudiu-ceia/dhash@0.5",
       "npm:preact-render-to-string@6.7.0",
       "npm:preact@10.29.7"
     ]
