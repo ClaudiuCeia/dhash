@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import sharp from "sharp";
 import {
   compare,
@@ -101,6 +101,18 @@ Deno.test("compare throws on different length hashes", () => {
   } catch (err) {
     // Just ensure it throws; message formatting isn't part of the contract.
     assertEquals(err instanceof Error, true);
+  }
+});
+
+Deno.test("hash APIs reject invalid 64-bit hex values", async () => {
+  const invalidHashes = ["", "not-hex", "10000000000000000"];
+  const message = "Hash must contain 1 to 16 hexadecimal characters.";
+
+  for (const hash of invalidHashes) {
+    assertThrows(() => invertHash(hash), TypeError, message);
+    assertThrows(() => compare(hash, hash), TypeError, message);
+    assertThrows(() => toAscii(hash), TypeError, message);
+    await assertRejects(() => raw(hash), TypeError, message);
   }
 });
 

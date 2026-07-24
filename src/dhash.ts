@@ -16,6 +16,15 @@ export type DHashOptions = {
 };
 
 const MASK_64 = (1n << 64n) - 1n;
+const HASH_PATTERN = /^[0-9a-f]{1,16}$/i;
+
+const parseHash = (hash: string): bigint => {
+  if (!HASH_PATTERN.test(hash)) {
+    throw new TypeError("Hash must contain 1 to 16 hexadecimal characters.");
+  }
+
+  return BigInt("0x" + hash);
+};
 
 /**
  * Invert a 64-bit dHash (bitwise NOT), preserving leading zeroes.
@@ -24,7 +33,7 @@ const MASK_64 = (1n << 64n) - 1n;
  * implementations.
  */
 export const invertHash = (hash: string): string => {
-  const v = BigInt("0x" + hash);
+  const v = parseHash(hash);
   return ((~v) & MASK_64).toString(16).padStart(16, "0");
 };
 
@@ -79,14 +88,15 @@ export const dhash = async (
  * Lower is more similar, higher is more different.
  */
 export const compare = (hash1: string, hash2: string): number => {
+  const a = parseHash(hash1);
+  const b = parseHash(hash2);
+
   if (hash1.length !== hash2.length) {
     throw new Error(`
         Hashes should be of the same length.
         Got ${hash1} of ${hash1.length} and ${hash2} of ${hash2.length}
     `);
   }
-  const a = BigInt("0x" + hash1);
-  const b = BigInt("0x" + hash2);
   const xor = a ^ b;
 
   return xor.toString(2).split("1").length - 1;
@@ -100,7 +110,7 @@ export const compare = (hash1: string, hash2: string): number => {
  */
 export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
   // Use BigInt to avoid precision loss; always render 64 bits (8x8).
-  const bin = BigInt("0x" + hash).toString(2).padStart(64, "0");
+  const bin = parseHash(hash).toString(2).padStart(64, "0");
   let out = "";
 
   for (let i = 0; i < 64; i++) {
@@ -115,7 +125,7 @@ export const toAscii = (hash: string, chars = ["░░", "██"]): string => {
  * Convert a hash into an 8x8 PNG (returned as bytes).
  */
 export async function raw(hash: string): Promise<Uint8Array> {
-  const bin = BigInt("0x" + hash).toString(2).padStart(64, "0");
+  const bin = parseHash(hash).toString(2).padStart(64, "0");
 
   const pixels = new Uint8Array(8 * 8); // grayscale 0–255
 
