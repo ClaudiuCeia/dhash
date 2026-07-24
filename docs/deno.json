@@ -5,7 +5,7 @@
     "jsxImportSource": "preact"
   },
   "imports": {
-    "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.3.2",
+    "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.4.0",
     "preact": "npm:preact@10.29.7",
     "preact-render-to-string": "npm:preact-render-to-string@6.7.0"
   },
