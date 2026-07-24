@@ -1,4 +1,4 @@
-name: Publish to JSR
+name: Publish
 
 on:
   push:
@@ -17,7 +17,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: publish-jsr-${{ github.ref }}
+  group: publish-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -35,6 +35,13 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+          registry-url: https://registry.npmjs.org
+
       - name: Verify tag matches deno.json version
         shell: bash
         run: |
@@ -51,8 +58,19 @@ jobs:
       - name: Check
         run: deno task check
 
-      - name: Publish
+      - name: Validate npm package
+        run: deno task check:npm
+
+      - name: Publish to JSR
         run: deno publish
+
+      - name: Pack npm package
+        run: deno pack --ignore=deno.lock --output dhash.tgz
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish dhash.tgz --access public
 
       - name: Generate release notes
         shell: bash

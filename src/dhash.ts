@@ -1,5 +1,6 @@
 import sharp from "sharp";
-import { normalize, resolve } from "@std/path";
+import { readFile, writeFile } from "node:fs/promises";
+import { normalize, resolve } from "node:path";
 
 /**
  * Options for {@link dhash}.
@@ -36,7 +37,7 @@ export const invertHash = (hash: string): string => {
  * Bit convention: by default, bit `1` means the intensity increases left-to-right
  * (`left < right`). Use `options.invert` to flip this.
  *
- * @param pathOrSrc File path (relative to `Deno.cwd()`) or raw image bytes.
+ * @param pathOrSrc File path (relative to the current working directory) or raw image bytes.
  * @returns 16-character lowercase hex string.
  */
 export const dhash = async (
@@ -46,10 +47,10 @@ export const dhash = async (
   let file = pathOrSrc;
 
   if (typeof pathOrSrc === "string") {
-    const resolvedPath = resolve(Deno.cwd(), normalize(pathOrSrc));
+    const resolvedPath = resolve(normalize(pathOrSrc));
 
     try {
-      file = await Deno.readFile(resolvedPath);
+      file = await readFile(resolvedPath);
     } catch {
       throw new Error(`Failed to open "${resolvedPath}"`);
     }
@@ -136,5 +137,5 @@ export async function raw(hash: string): Promise<Uint8Array> {
  */
 export async function save(hash: string, filePath: string): Promise<void> {
   const buffer = await raw(hash);
-  await Deno.writeFile(`${filePath}.png`, buffer);
+  await writeFile(`${filePath}.png`, buffer);
 }

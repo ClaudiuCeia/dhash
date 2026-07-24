@@ -1,6 +1,6 @@
 # dhash
 
-_A `dhash` implementation for Deno._
+_A `dhash` implementation for Deno and Node.js._
 
 A fast algorithm that allows checking if two images are "kind of" the same (the
 same source image, slightly modified). Examples:
@@ -31,6 +31,15 @@ deployed separately from the JSR package.
 
 ## Usage
 
+Install from JSR with Deno, or directly from npm with Node.js:
+
+```sh
+deno add jsr:@claudiu-ceia/dhash
+npm install @claudiu-ceia/dhash
+```
+
+The npm package is ESM-only.
+
 You can compare dhash values by simply computing the Hamming distance between
 them:
 
@@ -41,7 +50,7 @@ them:
   of the same base image
 
 ```ts
-import { compare, dhash } from "jsr:@claudiu-ceia/dhash";
+import { compare, dhash } from "@claudiu-ceia/dhash";
 
 const [hash1, hash2] = await Promise.all([
   dhash("./tests/dalle.png"),
@@ -71,6 +80,7 @@ preserved.
 ## Development
 
 - Run all checks: `deno task check`.
+- Build, install, and test the npm package with Node.js: `deno task check:npm`.
 - Try the experimental TypeScript 7 native checker: `deno task check:ts7`.
   Release CI continues to use Deno's stable default checker.
 - Run only tests: `deno task test` (requires
@@ -78,6 +88,7 @@ preserved.
   native bindings, reads fixtures, and the `save()` test writes to a temporary
   directory).
 - Preview the JSR package: `deno publish --dry-run`.
+- Preview the npm package: `deno pack --dry-run --ignore=deno.lock`.
 
 ## License
 
