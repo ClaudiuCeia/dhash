@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.event.release.tag_name || github.ref }}
 
@@ -37,14 +37,8 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Verify formatting
-        run: deno fmt --check
-
-      - name: Lint
-        run: deno lint
-
-      - name: Tests
-        run: deno task test
+      - name: Check
+        run: deno task check
 
       - name: Deploy
         env:

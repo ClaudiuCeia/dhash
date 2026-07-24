@@ -7,7 +7,7 @@ same source image, slightly modified). Examples:
 
 - A resized, compressed, slightly cropped, or color-altered image compared with
   the original
-- A watermarked image versus it's source
+- A watermarked image versus its source
 - Meme images (mostly the same template, different text)
 
 It does this by computing a `perceptual hash` of each image and then using it to
@@ -41,6 +41,8 @@ them:
   of the same base image
 
 ```ts
+import { compare, dhash } from "jsr:@claudiu-ceia/dhash";
+
 const [hash1, hash2] = await Promise.all([
   dhash("./tests/dalle.png"),
   dhash("./tests/dalle-copyright.png"),
@@ -68,8 +70,12 @@ preserved.
 
 ## Development
 
-- Run tests: `deno task test` (requires `--allow-read --allow-ffi --allow-env`
-  because `sharp` uses native bindings and reads fixtures).
+- Run all checks: `deno task check`.
+- Run only tests: `deno task test` (requires
+  `--allow-read --allow-write --allow-ffi --allow-env` because `sharp` uses
+  native bindings, reads fixtures, and the `save()` test writes to a temporary
+  directory).
+- Preview the JSR package: `deno publish --dry-run`.
 
 ## License
 

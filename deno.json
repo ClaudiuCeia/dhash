@@ -1,12 +1,13 @@
 {
   "name": "@claudiu-ceia/dhash",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "license": "MIT",
   "exports": "./mod.ts",
   "nodeModulesDir": "auto",
   "publish": {
     "exclude": [
       ".vscode",
+      ".github",
       "tests",
       "docs",
       "coverage",
@@ -15,14 +16,12 @@
     ]
   },
   "tasks": {
-    "test": "deno test --allow-read --allow-ffi --allow-env"
+    "check": "deno fmt --check && deno lint && deno check mod.ts && deno check --config docs/deno.json docs/main.ts && deno task test",
+    "test": "deno test --allow-read --allow-write --allow-ffi --allow-env"
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.18",
-    "@std/path": "jsr:@std/path@^1.1.4",
-    "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.3.2",
-    "preact": "npm:preact@10.28.3",
-    "preact-render-to-string": "npm:preact-render-to-string@6.6.5",
-    "sharp": "npm:sharp@0.34.5"
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@std/path": "jsr:@std/path@^1.1.6",
+    "sharp": "npm:sharp@0.35.3"
   }
 }

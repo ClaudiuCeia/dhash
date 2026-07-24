@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: deno
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      deno-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: deno
+    directory: "/docs"
+    schedule:
+      interval: weekly
+    groups:
+      demo-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"

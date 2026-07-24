@@ -6,8 +6,8 @@
   },
   "imports": {
     "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.3.2",
-    "preact": "npm:preact@10.28.3",
-    "preact-render-to-string": "npm:preact-render-to-string@6.6.5"
+    "preact": "npm:preact@10.29.7",
+    "preact-render-to-string": "npm:preact-render-to-string@6.7.0"
   },
   "deploy": {
     "org": "claudiuceia",

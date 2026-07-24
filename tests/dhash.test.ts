@@ -1,5 +1,13 @@
 import { assertEquals } from "@std/assert";
-import { compare, dhash, invertHash, raw, toAscii } from "../src/dhash.ts";
+import sharp from "sharp";
+import {
+  compare,
+  dhash,
+  invertHash,
+  raw,
+  save,
+  toAscii,
+} from "../src/dhash.ts";
 
 Deno.test("sample", async () => {
   assertEquals(await dhash("./tests/dalle.png"), "7735ac8c2da4746c");
@@ -96,8 +104,33 @@ Deno.test("compare throws on different length hashes", () => {
   }
 });
 
-Deno.test("raw returns a PNG buffer", async () => {
-  const png = await raw("0000000000000000");
-  // PNG signature: 89 50 4E 47 0D 0A 1A 0A
-  assertEquals(Array.from(png.slice(0, 8)), [137, 80, 78, 71, 13, 10, 26, 10]);
+Deno.test("raw renders hash bits to a PNG buffer", async () => {
+  const whitePng = await raw("0000000000000000");
+  const blackPng = await raw("ffffffffffffffff");
+
+  assertEquals(
+    Array.from((await sharp(whitePng).grayscale().raw().toBuffer()).values()),
+    Array(64).fill(255),
+  );
+  assertEquals(
+    Array.from((await sharp(blackPng).grayscale().raw().toBuffer()).values()),
+    Array(64).fill(0),
+  );
+});
+
+Deno.test("save appends .png and writes the fingerprint", async () => {
+  const directory = await Deno.makeTempDir();
+  const filePath = `${directory}/fingerprint`;
+
+  try {
+    await save("0000000000000000", filePath);
+    const png = await Deno.readFile(`${filePath}.png`);
+
+    assertEquals(
+      Array.from((await sharp(png).grayscale().raw().toBuffer()).values()),
+      Array(64).fill(255),
+    );
+  } finally {
+    await Deno.remove(directory, { recursive: true });
+  }
 });
