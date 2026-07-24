@@ -38,7 +38,8 @@ deno add jsr:@claudiu-ceia/dhash
 npm install @claudiu-ceia/dhash
 ```
 
-The npm package is ESM-only.
+The JSR package supports Deno 2.x. The npm package is ESM-only and supports
+Node.js 22 or newer.
 
 You can compare dhash values by simply computing the Hamming distance between
 them:
