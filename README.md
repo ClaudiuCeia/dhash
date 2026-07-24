@@ -71,6 +71,8 @@ preserved.
 ## Development
 
 - Run all checks: `deno task check`.
+- Try the experimental TypeScript 7 native checker: `deno task check:ts7`.
+  Release CI continues to use Deno's stable default checker.
 - Run only tests: `deno task test` (requires
   `--allow-read --allow-write --allow-ffi --allow-env` because `sharp` uses
   native bindings, reads fixtures, and the `save()` test writes to a temporary
