@@ -1,6 +1,9 @@
 import sharp from "sharp";
-import { readFile, writeFile } from "node:fs/promises";
+import { stat, writeFile } from "node:fs/promises";
 import { normalize, resolve } from "node:path";
+
+const DEFAULT_MAX_INPUT_BYTES = 64 * 1024 * 1024;
+const DEFAULT_MAX_INPUT_PIXELS = 64 * 1024 * 1024;
 
 /**
  * Options for {@link dhash}.
@@ -13,6 +16,20 @@ export type DHashOptions = {
    * Set invert=true to use: bit=1 when left >= right.
    */
   invert?: boolean;
+
+  /**
+   * Maximum encoded image size in bytes. Set to `false` to disable the limit.
+   *
+   * @default 67108864 (64 MiB)
+   */
+  maxInputBytes?: number | false;
+
+  /**
+   * Maximum decoded image pixel count. Set to `false` to disable the limit.
+   *
+   * @default 67108864 (64 megapixels)
+   */
+  limitInputPixels?: number | false;
 };
 
 const MASK_64 = (1n << 64n) - 1n;
@@ -54,18 +71,49 @@ export const dhash = async (
   options: DHashOptions = {},
 ): Promise<string> => {
   let file = pathOrSrc;
+  const maxInputBytes = options.maxInputBytes ?? DEFAULT_MAX_INPUT_BYTES;
+  const limitInputPixels = options.limitInputPixels ?? DEFAULT_MAX_INPUT_PIXELS;
+
+  if (
+    maxInputBytes !== false &&
+    (!Number.isSafeInteger(maxInputBytes) || maxInputBytes < 1)
+  ) {
+    throw new RangeError("maxInputBytes must be a positive safe integer.");
+  }
+  if (
+    limitInputPixels !== false &&
+    (!Number.isSafeInteger(limitInputPixels) || limitInputPixels < 1)
+  ) {
+    throw new RangeError("limitInputPixels must be a positive safe integer.");
+  }
 
   if (typeof pathOrSrc === "string") {
     const resolvedPath = resolve(normalize(pathOrSrc));
 
     try {
-      file = await readFile(resolvedPath);
-    } catch {
-      throw new Error(`Failed to open "${resolvedPath}"`);
+      const fileInfo = await stat(resolvedPath);
+      if (maxInputBytes !== false && fileInfo.size > maxInputBytes) {
+        throw new RangeError(
+          `Image exceeds the ${maxInputBytes}-byte input limit.`,
+        );
+      }
+      file = resolvedPath;
+    } catch (cause) {
+      if (cause instanceof RangeError) throw cause;
+      throw new Error(`Failed to open "${resolvedPath}"`, { cause });
     }
+  } else if (
+    maxInputBytes !== false && pathOrSrc.byteLength > maxInputBytes
+  ) {
+    throw new RangeError(
+      `Image exceeds the ${maxInputBytes}-byte input limit.`,
+    );
   }
 
-  const resized = await sharp(file).grayscale().resize(9, 8).raw().toBuffer();
+  const resized = await sharp(file, { limitInputPixels }).grayscale().resize(
+    9,
+    8,
+  ).raw().toBuffer();
 
   const out = [];
   for (let row = 0; row < 8; row++) {

@@ -23,6 +23,59 @@ Deno.test("dhash throws for missing files", async () => {
   assertEquals(error.message, `Failed to open "${path}"`);
 });
 
+Deno.test("dhash bounds encoded and decoded image sizes", async () => {
+  const image = await sharp({
+    create: {
+      width: 10,
+      height: 10,
+      channels: 3,
+      background: "white",
+    },
+  }).png().toBuffer();
+  const directory = await Deno.makeTempDir();
+  const path = `${directory}/image.png`;
+
+  try {
+    await Deno.writeFile(path, image);
+    await assertRejects(
+      () => dhash(image, { maxInputBytes: image.byteLength - 1 }),
+      RangeError,
+      `Image exceeds the ${image.byteLength - 1}-byte input limit.`,
+    );
+    await assertRejects(
+      () => dhash(path, { maxInputBytes: image.byteLength - 1 }),
+      RangeError,
+      `Image exceeds the ${image.byteLength - 1}-byte input limit.`,
+    );
+    await assertRejects(
+      () => dhash(image, { limitInputPixels: 99 }),
+      Error,
+      "Input image exceeds pixel limit",
+    );
+    assertEquals(
+      await dhash(image, { maxInputBytes: false, limitInputPixels: false }),
+      "0000000000000000",
+    );
+  } finally {
+    await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("dhash validates image limits", async () => {
+  const image = new Uint8Array();
+
+  await assertRejects(
+    () => dhash(image, { maxInputBytes: 0 }),
+    RangeError,
+    "maxInputBytes must be a positive safe integer.",
+  );
+  await assertRejects(
+    () => dhash(image, { limitInputPixels: Number.MAX_SAFE_INTEGER + 1 }),
+    RangeError,
+    "limitInputPixels must be a positive safe integer.",
+  );
+});
+
 Deno.test("comparison", async () => {
   const res = await Promise.all([
     dhash("./tests/dalle.png"),
