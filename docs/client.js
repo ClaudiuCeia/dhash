@@ -314,7 +314,7 @@ function render() {
     kv.innerHTML =
       '<div class="text-slate-500">hash</div><div class="font-mono text-slate-900 truncate">' +
       escapeHtml(
-        it.hash || (it.err ? "error" : (it.inFlight ? "computing..." : "-")),
+        it.hash || (it.err || (it.inFlight ? "computing..." : "-")),
       ) +
       "</div>" +
       '<div class="text-slate-500">diff</div><div class="font-mono text-slate-900">' +

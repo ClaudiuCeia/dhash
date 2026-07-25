@@ -397,10 +397,8 @@ export async function handler(req: Request): Promise<Response> {
       if (err instanceof PayloadTooLargeError) {
         return json({ error: "Payload too large (max 10MB)." }, 413);
       }
-      const detail = err instanceof Error
-        ? (err.stack ?? err.message)
-        : String(err);
-      return json({ error: "Failed to compute hash.", detail }, 500);
+      console.error("Image hashing failed", err);
+      return json({ error: "Invalid or unsupported image." }, 422);
     } finally {
       activeHashes--;
     }
