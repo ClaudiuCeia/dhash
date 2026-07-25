@@ -1,9 +1,22 @@
 import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 
 const packageName = "@claudiu-ceia/dhash";
 const npm = Deno.build.os === "windows" ? "npm.cmd" : "npm";
 const npx = Deno.build.os === "windows" ? "npx.cmd" : "npx";
 const fixtureDirectory = fileURLToPath(new URL("../tests", import.meta.url));
+const args = [...Deno.args];
+const archiveArgument = args.indexOf("--archive");
+let suppliedArchive: string | undefined;
+
+if (archiveArgument !== -1) {
+  const value = args[archiveArgument + 1];
+  if (value === undefined || value.startsWith("--")) {
+    throw new Error("--archive requires a path.");
+  }
+  suppliedArchive = resolve(value);
+  args.splice(archiveArgument, 2);
+}
 
 async function run(
   command: string,
@@ -27,19 +40,21 @@ async function run(
 }
 
 const directory = await Deno.makeTempDir({ prefix: "dhash-npm-" });
-const archive = `${directory}/dhash.tgz`;
+const archive = suppliedArchive ?? `${directory}/dhash.tgz`;
 
 try {
-  await run(
-    Deno.execPath(),
-    [
-      "run",
-      "-A",
-      fileURLToPath(new URL("./pack_npm.ts", import.meta.url)),
-      archive,
-    ],
-    Deno.cwd(),
-  );
+  if (suppliedArchive === undefined) {
+    await run(
+      Deno.execPath(),
+      [
+        "run",
+        "-A",
+        fileURLToPath(new URL("./pack_npm.ts", import.meta.url)),
+        archive,
+      ],
+      Deno.cwd(),
+    );
+  }
 
   await Deno.writeTextFile(
     `${directory}/package.json`,
@@ -52,7 +67,11 @@ try {
   await Deno.writeTextFile(
     `${directory}/consumer.ts`,
     `import { type DHashOptions, dhash, toAscii } from "${packageName}";
-const options: DHashOptions = { invert: true };
+const options: DHashOptions = {
+  invert: true,
+  maxInputBytes: false,
+  limitInputPixels: 1_000_000,
+};
 const hash: Promise<string> = dhash(new Uint8Array(), options);
 const ascii: string = toAscii("0", [".", "#"]);
 void hash;
@@ -94,7 +113,7 @@ void ascii;
     directory,
   );
 
-  const versions = Deno.args.length > 0 ? Deno.args : [null];
+  const versions = args.length > 0 ? args : [null];
   for (const version of versions) {
     const command = version === null ? "node" : npx;
     const args = version === null

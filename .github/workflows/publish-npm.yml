@@ -53,11 +53,11 @@ jobs:
             exit 1
           fi
 
-      - name: Check npm package
-        run: deno task check:npm
-
       - name: Pack npm package
         run: deno task pack:npm
+
+      - name: Check npm package
+        run: deno task check:npm --archive "${GITHUB_WORKSPACE}/dhash.tgz" 22 24
 
       - name: Upload npm package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
