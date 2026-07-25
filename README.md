@@ -37,9 +37,9 @@ deno add jsr:@claudiu-ceia/dhash
 npm install @claudiu-ceia/dhash
 ```
 
-The JSR package supports Deno 2.x. The npm package is ESM-only and supports
-Node.js 22 or newer. Images are auto-oriented from metadata, converted to
-grayscale, and resized in full to 9x8 without cropping.
+The JSR package supports Deno 2.6 or newer. The npm package is ESM-only and
+supports Node.js 22 or newer. Images are auto-oriented from metadata, converted
+to grayscale, and resized in full to 9x8 without cropping.
 
 You can compare dhash values by simply computing the Hamming distance between
 them:
