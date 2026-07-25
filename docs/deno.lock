@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@claudiu-ceia/dhash@0.6": "0.6.0",
+    "jsr:@claudiu-ceia/dhash@0.7": "0.7.0",
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:happy-dom@20.11.1": "20.11.1",
@@ -11,8 +11,8 @@
     "npm:tailwindcss@3.4.17": "3.4.17"
   },
   "jsr": {
-    "@claudiu-ceia/dhash@0.6.0": {
-      "integrity": "29a806a40d13ad5b20a5fbc4a4c4e894fa14d17d652f8b11a324cc429e953063",
+    "@claudiu-ceia/dhash@0.7.0": {
+      "integrity": "a2a2b7eae8ab42376a1b13940c16250e07799e31ca5f4ab650c7fde2fe1d3072",
       "dependencies": [
         "npm:sharp"
       ]
@@ -714,7 +714,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@claudiu-ceia/dhash@0.6",
+      "jsr:@claudiu-ceia/dhash@0.7",
       "jsr:@std/assert@^1.0.19",
       "npm:happy-dom@20.11.1",
       "npm:preact-render-to-string@6.7.0",
