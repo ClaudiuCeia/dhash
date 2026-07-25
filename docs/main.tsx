@@ -82,6 +82,11 @@ function html(body: string, status = 200): Response {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
       "x-content-type-options": "nosniff",
+      "content-security-policy":
+        "default-src 'none'; script-src 'self'; style-src 'self'; " +
+        "img-src 'self' blob:; connect-src 'self'; base-uri 'none'; " +
+        "form-action 'none'; frame-ancestors 'none'; object-src 'none'",
+      "referrer-policy": "no-referrer",
     },
   });
 }
@@ -97,13 +102,33 @@ function js(body: string, status = 200): Response {
   });
 }
 
+function css(body: string, status = 200): Response {
+  return new Response(body, {
+    status,
+    headers: {
+      "content-type": "text/css; charset=utf-8",
+      "cache-control": "no-store",
+      "x-content-type-options": "nosniff",
+    },
+  });
+}
+
 const CLIENT_JS_PATH = new URL("./client.js", import.meta.url);
+const STYLES_PATH = new URL("./styles.css", import.meta.url);
 let clientJsCache: string | null = null;
+let stylesCache: string | null = null;
 async function getClientJs(): Promise<string> {
   if (clientJsCache === null) {
     clientJsCache = await Deno.readTextFile(CLIENT_JS_PATH);
   }
   return clientJsCache;
+}
+
+async function getStyles(): Promise<string> {
+  if (stylesCache === null) {
+    stylesCache = await Deno.readTextFile(STYLES_PATH);
+  }
+  return stylesCache;
 }
 
 const GitHubMark = (
@@ -146,13 +171,7 @@ function Page() {
           name="description"
           content="Upload up to 20 images, compute perceptual hashes (dHash), then sort by similarity."
         />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <style
-          // deno-lint-ignore react-no-danger
-          dangerouslySetInnerHTML={{
-            __html: CSS,
-          }}
-        />
+        <link rel="stylesheet" href="/styles.css" />
       </head>
       <body>
         <div class="relative overflow-hidden">
@@ -330,15 +349,6 @@ function Page() {
   );
 }
 
-const CSS = `
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  background: #fbfcff;
-}
-`;
-
 const DOCTYPE = "<!doctype html>";
 
 export async function handler(req: Request): Promise<Response> {
@@ -351,6 +361,10 @@ export async function handler(req: Request): Promise<Response> {
 
   if (req.method === "GET" && path === "/client.js") {
     return js(await getClientJs());
+  }
+
+  if (req.method === "GET" && path === "/styles.css") {
+    return css(await getStyles());
   }
 
   // Compatibility endpoint (single raw upload).
