@@ -5,6 +5,9 @@ const packageName = "@claudiu-ceia/dhash";
 const npm = Deno.build.os === "windows" ? "npm.cmd" : "npm";
 const npx = Deno.build.os === "windows" ? "npx.cmd" : "npx";
 const fixtureDirectory = fileURLToPath(new URL("../tests", import.meta.url));
+const expectedVersion = JSON.parse(
+  await Deno.readTextFile(new URL("../deno.json", import.meta.url)),
+).version;
 const args = [...Deno.args];
 const archiveArgument = args.indexOf("--archive");
 let suppliedArchive: string | undefined;
@@ -99,6 +102,7 @@ void ascii;
     ),
   );
   if (
+    installedPackage.version !== expectedVersion ||
     installedPackage.engines?.node !== ">=22" ||
     installedPackage.repository?.url !==
       "git+https://github.com/ClaudiuCeia/dhash.git" ||
