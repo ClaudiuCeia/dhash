@@ -5,6 +5,55 @@ import docsConfig from "./deno.json" with { type: "json" };
 
 const MAX_FILES = 20;
 const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_ACTIVE_HASHES = 4;
+let activeHashes = 0;
+
+class PayloadTooLargeError extends Error {}
+
+async function readBodyBounded(
+  request: Request,
+  maximum: number,
+): Promise<Uint8Array> {
+  if (request.body === null) return new Uint8Array();
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      if (total + value.byteLength > maximum) {
+        await reader.cancel("payload too large").catch(() => {});
+        throw new PayloadTooLargeError();
+      }
+
+      chunks.push(value);
+      total += value.byteLength;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const body = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
+function declaredLength(request: Request): number | null {
+  const value = request.headers.get("content-length");
+  if (value === null) return null;
+  if (!/^\d+$/.test(value)) return Number.POSITIVE_INFINITY;
+
+  const length = Number(value);
+  return Number.isSafeInteger(length) ? length : Number.POSITIVE_INFINITY;
+}
 
 const LIB_SPEC =
   (docsConfig as { imports?: Record<string, string> }).imports?.dhash_jsr ??
@@ -292,7 +341,7 @@ body {
 
 const DOCTYPE = "<!doctype html>";
 
-Deno.serve(async (req) => {
+export async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname;
 
@@ -306,65 +355,42 @@ Deno.serve(async (req) => {
 
   // Compatibility endpoint (single raw upload).
   if (req.method === "POST" && path === "/hash") {
-    const buf = await req.arrayBuffer();
-    if (buf.byteLength === 0) {
+    const contentLength = declaredLength(req);
+    if (contentLength === 0) {
       return json({ error: "Empty request body." }, 400);
     }
-    if (buf.byteLength > MAX_BYTES) {
+    if (contentLength !== null && contentLength > MAX_BYTES) {
       return json({ error: "Payload too large (max 10MB)." }, 413);
     }
+    if (activeHashes >= MAX_ACTIVE_HASHES) {
+      const response = json(
+        { error: "Hash service is busy. Retry shortly." },
+        503,
+      );
+      response.headers.set("retry-after", "1");
+      return response;
+    }
+
+    activeHashes++;
     try {
-      const hash = await dhash(new Uint8Array(buf));
+      const bytes = await readBodyBounded(req, MAX_BYTES);
+      if (bytes.byteLength === 0) {
+        return json({ error: "Empty request body." }, 400);
+      }
+      const hash = await dhash(bytes);
       return json({ hash });
     } catch (err) {
+      if (err instanceof PayloadTooLargeError) {
+        return json({ error: "Payload too large (max 10MB)." }, 413);
+      }
       const detail = err instanceof Error
         ? (err.stack ?? err.message)
         : String(err);
       return json({ error: "Failed to compute hash.", detail }, 500);
+    } finally {
+      activeHashes--;
     }
-  }
-
-  if (req.method === "POST" && path === "/api/hash") {
-    let form: FormData;
-    try {
-      form = await req.formData();
-    } catch {
-      return json({ error: "Expected multipart/form-data." }, 400);
-    }
-
-    const files = form.getAll("images").filter((v): v is File =>
-      v instanceof File
-    );
-    if (files.length === 0) return json({ error: "No images uploaded." }, 400);
-    if (files.length > MAX_FILES) {
-      return json({ error: `Too many images. Max is ${MAX_FILES}.` }, 400);
-    }
-
-    for (const f of files) {
-      if (f.size > MAX_BYTES) {
-        return json({ error: `File too large: ${f.name} (max 10MB).` }, 413);
-      }
-    }
-
-    const out: Array<
-      { name: string; type: string; size: number; hash: string }
-    > = [];
-
-    try {
-      for (const f of files) {
-        const bytes = new Uint8Array(await f.arrayBuffer());
-        const hash = await dhash(bytes);
-        out.push({ name: f.name, type: f.type, size: f.size, hash });
-      }
-    } catch (err) {
-      const detail = err instanceof Error
-        ? (err.stack ?? err.message)
-        : String(err);
-      return json({ error: "Failed to compute hashes.", detail }, 500);
-    }
-
-    return json({ items: out });
   }
 
   return json({ error: "Not found." }, 404);
-});
+}
