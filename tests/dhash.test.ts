@@ -153,6 +153,38 @@ Deno.test("dhash composites transparent pixels on white", async () => {
   );
 });
 
+Deno.test("dhash uses the first animated image frame", async () => {
+  const width = 9;
+  const height = 8;
+  const channels = 3;
+  const first = new Uint8Array(width * height * channels);
+  const second = new Uint8Array(width * height * channels);
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      for (let channel = 0; channel < channels; channel++) {
+        first[(row * width + col) * channels + channel] = col * 28;
+        second[(row * width + col) * channels + channel] = (8 - col) * 28;
+      }
+    }
+  }
+  const pages = new Uint8Array(first.length + second.length);
+  pages.set(first);
+  pages.set(second, first.length);
+  const animated = await sharp(pages, {
+    raw: {
+      width,
+      height: height * 2,
+      channels,
+      pageHeight: height,
+    },
+  }).gif({ loop: 0, delay: [100, 100] }).toBuffer();
+  const firstFrame = await sharp(first, {
+    raw: { width, height, channels },
+  }).png().toBuffer();
+
+  assertEquals(await dhash(animated), await dhash(firstFrame));
+});
+
 Deno.test("comparison", async () => {
   const res = await Promise.all([
     dhash("./tests/dalle.png"),
