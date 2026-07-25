@@ -12,34 +12,33 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
 concurrency:
   group: publish-npm-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.tag || github.ref }}
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v2
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         with:
           deno-version: v2.x
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           package-manager-cache: false
-          registry-url: https://registry.npmjs.org
 
       - name: Verify tag matches deno.json version
         shell: bash
@@ -59,10 +58,39 @@ jobs:
       - name: Pack npm package
         run: deno task pack:npm
 
+      - name: Upload npm package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: npm-package-${{ github.sha }}
+          path: dhash.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download npm package
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: npm-package-${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+          registry-url: https://registry.npmjs.org
+
       - name: Publish to npm
         shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          version="$(deno eval "console.log(JSON.parse(Deno.readTextFileSync('deno.json')).version)")"
+          version="${RELEASE_TAG#v}"
           if npm view "@claudiu-ceia/dhash@${version}" version >/dev/null 2>&1; then
             echo "@claudiu-ceia/dhash@${version} is already published to npm."
           else
