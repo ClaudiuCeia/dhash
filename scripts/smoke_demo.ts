@@ -5,13 +5,16 @@ if (!expectedDeployment) throw new Error("EXPECTED_DEPLOY_SHA is required.");
 const expectedVersion = Deno.env.get("EXPECTED_VERSION");
 if (!expectedVersion) throw new Error("EXPECTED_VERSION is required.");
 const EXPECTED_FIXTURE_HASH = "0c7725cc0d25746c";
+const FETCH_TIMEOUT_MS = 10_000;
 
 const fixture = await Deno.readFile(
   new URL("../tests/dalle.png", import.meta.url),
 );
 
 async function expectStatus(path: string, status: number): Promise<Response> {
-  const response = await fetch(`${baseUrl}${path}`);
+  const response = await fetch(`${baseUrl}${path}`, {
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
   if (response.status !== status) {
     throw new Error(`${path} returned ${response.status}, expected ${status}.`);
   }
@@ -48,6 +51,7 @@ async function smokeTest(): Promise<void> {
     method: "POST",
     headers: { "content-type": "application/octet-stream" },
     body: fixture,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   const hashBody = await hashResponse.json() as { hash?: unknown };
   if (
@@ -59,14 +63,20 @@ async function smokeTest(): Promise<void> {
     );
   }
 
-  const empty = await fetch(`${baseUrl}/hash`, { method: "POST" });
+  const empty = await fetch(`${baseUrl}/hash`, {
+    method: "POST",
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
   if (empty.status !== 400) {
     throw new Error(
       `Empty hash request returned ${empty.status}, expected 400.`,
     );
   }
 
-  const removed = await fetch(`${baseUrl}/api/hash`, { method: "POST" });
+  const removed = await fetch(`${baseUrl}/api/hash`, {
+    method: "POST",
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
   if (removed.status !== 404) {
     throw new Error(`/api/hash returned ${removed.status}, expected 404.`);
   }
