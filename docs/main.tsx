@@ -6,7 +6,31 @@ import docsConfig from "./deno.json" with { type: "json" };
 const MAX_FILES = 20;
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_ACTIVE_HASHES = 4;
-let activeHashes = 0;
+
+type HashFunction = (bytes: Uint8Array) => Promise<string>;
+type ConcurrencyLimiter = {
+  tryAcquire(): (() => void) | null;
+};
+
+export function createConcurrencyLimiter(maximum: number): ConcurrencyLimiter {
+  if (!Number.isInteger(maximum) || maximum < 1) {
+    throw new RangeError("maximum must be a positive integer.");
+  }
+
+  let active = 0;
+  return {
+    tryAcquire() {
+      if (active >= maximum) return null;
+      active++;
+      let released = false;
+      return () => {
+        if (released) return;
+        released = true;
+        active--;
+      };
+    },
+  };
+}
 
 class PayloadTooLargeError extends Error {}
 
@@ -358,58 +382,74 @@ function Page() {
 
 const DOCTYPE = "<!doctype html>";
 
-export async function handler(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const path = url.pathname;
+export function createHandler(
+  options: {
+    hash?: HashFunction;
+    limiter?: ConcurrencyLimiter;
+    maxBytes?: number;
+    onError?: (error: unknown) => void;
+  } = {},
+): (req: Request) => Promise<Response> {
+  const hash = options.hash ?? dhash;
+  const limiter = options.limiter ??
+    createConcurrencyLimiter(MAX_ACTIVE_HASHES);
+  const maxBytes = options.maxBytes ?? MAX_BYTES;
+  const onError = options.onError ??
+    ((error) => console.error("Image hashing failed", error));
 
-  if (req.method === "GET" && path === "/") {
-    return html(DOCTYPE + renderToString(<Page />));
-  }
+  return async (req: Request): Promise<Response> => {
+    const url = new URL(req.url);
+    const path = url.pathname;
 
-  if (req.method === "GET" && path === "/client.js") {
-    return js(await getClientJs());
-  }
-
-  if (req.method === "GET" && path === "/styles.css") {
-    return css(await getStyles());
-  }
-
-  // Compatibility endpoint (single raw upload).
-  if (req.method === "POST" && path === "/hash") {
-    const contentLength = declaredLength(req);
-    if (contentLength === 0) {
-      return json({ error: "Empty request body." }, 400);
-    }
-    if (contentLength !== null && contentLength > MAX_BYTES) {
-      return json({ error: "Payload too large (max 10MB)." }, 413);
-    }
-    if (activeHashes >= MAX_ACTIVE_HASHES) {
-      const response = json(
-        { error: "Hash service is busy. Retry shortly." },
-        503,
-      );
-      response.headers.set("retry-after", "1");
-      return response;
+    if (req.method === "GET" && path === "/") {
+      return html(DOCTYPE + renderToString(<Page />));
     }
 
-    activeHashes++;
-    try {
-      const bytes = await readBodyBounded(req, MAX_BYTES);
-      if (bytes.byteLength === 0) {
+    if (req.method === "GET" && path === "/client.js") {
+      return js(await getClientJs());
+    }
+
+    if (req.method === "GET" && path === "/styles.css") {
+      return css(await getStyles());
+    }
+
+    if (req.method === "POST" && path === "/hash") {
+      const contentLength = declaredLength(req);
+      if (contentLength === 0) {
         return json({ error: "Empty request body." }, 400);
       }
-      const hash = await dhash(bytes);
-      return json({ hash });
-    } catch (err) {
-      if (err instanceof PayloadTooLargeError) {
+      if (contentLength !== null && contentLength > maxBytes) {
         return json({ error: "Payload too large (max 10MB)." }, 413);
       }
-      console.error("Image hashing failed", err);
-      return json({ error: "Invalid or unsupported image." }, 422);
-    } finally {
-      activeHashes--;
-    }
-  }
+      const release = limiter.tryAcquire();
+      if (release === null) {
+        const response = json(
+          { error: "Hash service is busy. Retry shortly." },
+          503,
+        );
+        response.headers.set("retry-after", "1");
+        return response;
+      }
 
-  return json({ error: "Not found." }, 404);
+      try {
+        const bytes = await readBodyBounded(req, maxBytes);
+        if (bytes.byteLength === 0) {
+          return json({ error: "Empty request body." }, 400);
+        }
+        return json({ hash: await hash(bytes) });
+      } catch (err) {
+        if (err instanceof PayloadTooLargeError) {
+          return json({ error: "Payload too large (max 10MB)." }, 413);
+        }
+        onError(err);
+        return json({ error: "Invalid or unsupported image." }, 422);
+      } finally {
+        release();
+      }
+    }
+
+    return json({ error: "Not found." }, 404);
+  };
 }
+
+export const handler = createHandler();

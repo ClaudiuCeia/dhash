@@ -18,12 +18,15 @@
   },
   "tasks": {
     "build:css": "deno run --config docs/deno.json --frozen -A npm:tailwindcss@3.4.17 -i docs/tailwind.css -o docs/styles.css --content docs/main.tsx,docs/client.js --minify",
-    "check": "deno task check:css && deno fmt --check && deno lint && deno check mod.ts scripts/pack_npm.ts scripts/test_npm.ts && deno check --config docs/deno.json docs/main.ts && deno task test",
+    "check": "deno task check:css && deno fmt --check && deno lint && deno check mod.ts scripts/pack_npm.ts scripts/test_npm.ts scripts/smoke_demo.ts && deno check --config docs/deno.json docs/main.ts && deno task test",
     "check:css": "deno task build:css && git diff --exit-code -- docs/styles.css",
     "check:npm": "deno run -A scripts/test_npm.ts",
-    "check:ts7": "deno check --unstable-tsgo mod.ts scripts/pack_npm.ts scripts/test_npm.ts && deno check --unstable-tsgo --config docs/deno.json docs/main.ts && deno test --unstable-tsgo --allow-read --allow-write --allow-ffi --allow-env",
+    "check:ts7": "deno check --unstable-tsgo mod.ts scripts/pack_npm.ts scripts/test_npm.ts scripts/smoke_demo.ts && deno check --unstable-tsgo --config docs/deno.json docs/main.ts && deno task test:ts7",
     "pack:npm": "deno run -A scripts/pack_npm.ts",
-    "test": "deno test --allow-read --allow-write --allow-ffi --allow-env"
+    "test": "deno task test:lib && deno task test:demo",
+    "test:demo": "deno test --config docs/deno.json --allow-read --allow-ffi --allow-env docs/main.test.ts",
+    "test:lib": "deno test --allow-read --allow-write --allow-ffi --allow-env tests",
+    "test:ts7": "deno test --unstable-tsgo --allow-read --allow-write --allow-ffi --allow-env tests && deno test --unstable-tsgo --config docs/deno.json --allow-read --allow-ffi --allow-env docs/main.test.ts"
   },
   "fmt": {
     "exclude": ["docs/styles.css"]

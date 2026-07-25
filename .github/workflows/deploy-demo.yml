@@ -42,3 +42,13 @@ jobs:
         env:
           DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
         run: deno deploy --config docs/deno.json --prod docs
+
+      - name: Smoke test
+        env:
+          DEMO_URL: https://dhash.claudiuceia.deno.net
+        run: >-
+          deno run
+          --allow-env=DEMO_URL
+          --allow-net=dhash.claudiuceia.deno.net
+          --allow-read=tests/dalle.png
+          scripts/smoke_demo.ts
