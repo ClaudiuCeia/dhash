@@ -273,6 +273,28 @@ Deno.test("hash APIs reject invalid 64-bit hex values", async () => {
       (await assertRejects(() => raw(hash), TypeError)).message,
       message,
     );
+    assertEquals(
+      (await assertRejects(() => save(hash, "unused"), TypeError)).message,
+      message,
+    );
+  }
+});
+
+Deno.test("hash APIs accept short uppercase values", async () => {
+  assertEquals(invertHash("A"), "fffffffffffffff5");
+  assertEquals(compare("A", "a"), 0);
+  assertEquals(toAscii("A"), toAscii("a"));
+  assertEquals(await raw("A"), await raw("a"));
+
+  const directory = await Deno.makeTempDir();
+  try {
+    await save("A", `${directory}/uppercase`);
+    assertEquals(
+      Array.from(await Deno.readFile(`${directory}/uppercase.png`)),
+      Array.from(await raw("a")),
+    );
+  } finally {
+    await Deno.remove(directory, { recursive: true });
   }
 });
 
