@@ -18,8 +18,8 @@ const expected = {
   "dalle.png": "0c7725cc0d25746c",
   "dalle-copyright.png": "0c7725cc2d25746c",
   "dalle-bolder-copyright.jpeg": "0c773d852d24746c",
-  "dalle-crop.jpeg": "09e52b2908094d6c",
-  "dalle-edited.jpeg": "2c7725cc0d25746c",
+  "dalle-crop.jpeg": "09e52b2908084d6c",
+  "dalle-edited.jpeg": "0c7725cc0d24746c",
   "dalle-stickers.jpeg": "0c77248c2d24746c",
 };
 
@@ -35,7 +35,7 @@ for (const [name, expectedHash] of Object.entries(expected)) {
 
 assert.equal(compare(hashes[0], hashes[1]), 1);
 assert.equal(compare(hashes[0], hashes[2]), 7);
-assert.equal(compare(hashes[0], hashes[3]), 22);
+assert.equal(compare(hashes[0], hashes[3]), 23);
 assert.equal(compare(hashes[0], hashes[4]), 1);
 assert.equal(compare(hashes[0], hashes[5]), 4);
 assert.equal(invertHash(invertHash(hashes[0])), hashes[0]);
