@@ -1,13 +1,18 @@
-import { assertEquals, assertRejects, assertThrows } from "@std/assert";
+import {
+  assertEquals,
+  assertNotEquals,
+  assertRejects,
+  assertThrows,
+} from "@std/assert";
 import { resolve } from "node:path";
 import sharp from "sharp";
 import { compare, dhash, invertHash, raw, save, toAscii } from "../mod.ts";
 
 Deno.test("sample", async () => {
-  assertEquals(await dhash("./tests/dalle.png"), "7735ac8c2da4746c");
+  assertEquals(await dhash("./tests/dalle.png"), "0c7725cc0d25746c");
 
   const uint8arr = await Deno.readFile(new URL("./dalle.png", import.meta.url));
-  assertEquals(await dhash(uint8arr), "7735ac8c2da4746c");
+  assertEquals(await dhash(uint8arr), "0c7725cc0d25746c");
 });
 
 Deno.test("dhash invert matches invertHash()", async () => {
@@ -76,6 +81,25 @@ Deno.test("dhash validates image limits", async () => {
   );
 });
 
+Deno.test("dhash includes non-square image edges", async () => {
+  const makeImage = async (edge: number) => {
+    const pixels = new Uint8Array(18 * 8);
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 18; col++) {
+        pixels[row * 18 + col] = col >= 4 && col < 14 ? (col - 4) * 25 : edge;
+      }
+    }
+    return await sharp(pixels, {
+      raw: { width: 18, height: 8, channels: 1 },
+    }).png().toBuffer();
+  };
+
+  assertNotEquals(
+    await dhash(await makeImage(0)),
+    await dhash(await makeImage(255)),
+  );
+});
+
 Deno.test("comparison", async () => {
   const res = await Promise.all([
     dhash("./tests/dalle.png"),
@@ -87,22 +111,22 @@ Deno.test("comparison", async () => {
   ]);
 
   assertEquals(compare(res[0], res[1]), 1);
-  assertEquals(compare(res[0], res[2]), 2);
-  assertEquals(compare(res[0], res[3]), 27);
-  assertEquals(compare(res[0], res[4]), 2);
-  assertEquals(compare(res[0], res[5]), 1);
+  assertEquals(compare(res[0], res[2]), 7);
+  assertEquals(compare(res[0], res[3]), 23);
+  assertEquals(compare(res[0], res[4]), 1);
+  assertEquals(compare(res[0], res[5]), 4);
 });
 
 Deno.test("print", async () => {
   const hash = await dhash("./tests/dalle.png");
   assertEquals(
     toAscii(hash),
-    `░░██████░░██████
-    ░░░░████░░██░░██
-    ██░░██░░████░░░░
-    ██░░░░░░████░░░░
-    ░░░░██░░████░░██
-    ██░░██░░░░██░░░░
+    `░░░░░░░░████░░░░
+    ░░██████░░██████
+    ░░░░██░░░░██░░██
+    ████░░░░████░░░░
+    ░░░░░░░░████░░██
+    ░░░░██░░░░██░░██
     ░░██████░░██░░░░
     ░░████░░████░░░░`.replaceAll(" ", ""),
   );

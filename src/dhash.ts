@@ -113,6 +113,7 @@ export const dhash = async (
   const resized = await sharp(file, { limitInputPixels }).grayscale().resize(
     9,
     8,
+    { fit: "fill" },
   ).raw().toBuffer();
 
   const out = [];

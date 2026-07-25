@@ -14,12 +14,12 @@ const fixtures = process.env.DHASH_FIXTURES;
 assert.ok(fixtures, "DHASH_FIXTURES must point to the image fixtures");
 
 const expected = {
-  "dalle.png": "7735ac8c2da4746c",
-  "dalle-copyright.png": "7735ac0c2da4746c",
-  "dalle-bolder-copyright.jpeg": "7735ac852da4746c",
-  "dalle-crop.jpeg": "19e52b2908084d6c",
-  "dalle-edited.jpeg": "77352c0c2da4746c",
-  "dalle-stickers.jpeg": "77358c8c2da4746c",
+  "dalle.png": "0c7725cc0d25746c",
+  "dalle-copyright.png": "0c7725cc2d25746c",
+  "dalle-bolder-copyright.jpeg": "0c773d852d24746c",
+  "dalle-crop.jpeg": "09e52b2908084d6c",
+  "dalle-edited.jpeg": "0c7725cc0d24746c",
+  "dalle-stickers.jpeg": "0c77248c2d24746c",
 };
 
 const hashes = [];
@@ -33,10 +33,10 @@ for (const [name, expectedHash] of Object.entries(expected)) {
 }
 
 assert.equal(compare(hashes[0], hashes[1]), 1);
-assert.equal(compare(hashes[0], hashes[2]), 2);
-assert.equal(compare(hashes[0], hashes[3]), 27);
-assert.equal(compare(hashes[0], hashes[4]), 2);
-assert.equal(compare(hashes[0], hashes[5]), 1);
+assert.equal(compare(hashes[0], hashes[2]), 7);
+assert.equal(compare(hashes[0], hashes[3]), 23);
+assert.equal(compare(hashes[0], hashes[4]), 1);
+assert.equal(compare(hashes[0], hashes[5]), 4);
 assert.equal(invertHash(invertHash(hashes[0])), hashes[0]);
 assert.equal(toAscii(hashes[0]).split("\n").length, 8);
 
