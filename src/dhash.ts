@@ -111,6 +111,7 @@ export const dhash = async (
   }
 
   const oriented = await sharp(file, { limitInputPixels }).autoOrient()
+    .flatten({ background: "white" })
     .grayscale()
     .raw()
     .toBuffer({ resolveWithObject: true });

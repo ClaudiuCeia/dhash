@@ -39,7 +39,8 @@ npm install @claudiu-ceia/dhash
 
 The JSR package supports Deno 2.6 or newer. The npm package is ESM-only and
 supports Node.js 22 or newer. Images are auto-oriented from metadata, converted
-to grayscale, and resized in full to 9x8 without cropping.
+to grayscale, composited on white when transparent, and resized in full to 9x8
+without cropping. Multi-frame images use their first frame.
 
 You can compare dhash values by simply computing the Hamming distance between
 them:

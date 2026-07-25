@@ -121,6 +121,38 @@ Deno.test("dhash respects EXIF orientation", async () => {
   assertEquals(await dhash(exifOriented), await dhash(physicallyRotated));
 });
 
+Deno.test("dhash composites transparent pixels on white", async () => {
+  const makeImage = async (hiddenValue: (index: number) => number) => {
+    const pixels = new Uint8Array(9 * 8 * 4);
+    for (let i = 0; i < 9 * 8; i++) {
+      pixels[i * 4] = hiddenValue(i);
+      pixels[i * 4 + 1] = hiddenValue(i + 1);
+      pixels[i * 4 + 2] = hiddenValue(i + 2);
+      pixels[i * 4 + 3] = 0;
+    }
+    return await sharp(pixels, {
+      raw: { width: 9, height: 8, channels: 4 },
+    }).png().toBuffer();
+  };
+  const white = await sharp({
+    create: {
+      width: 9,
+      height: 8,
+      channels: 3,
+      background: "white",
+    },
+  }).png().toBuffer();
+
+  assertEquals(
+    await dhash(await makeImage((i) => i % 256)),
+    await dhash(white),
+  );
+  assertEquals(
+    await dhash(await makeImage((i) => 255 - (i % 256))),
+    await dhash(white),
+  );
+});
+
 Deno.test("comparison", async () => {
   const res = await Promise.all([
     dhash("./tests/dalle.png"),
