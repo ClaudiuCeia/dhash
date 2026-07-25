@@ -4,13 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
-      - "*.*.*"
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to publish (e.g. v0.3.0)"
-        required: true
-        type: string
 
 permissions: {}
 
@@ -28,7 +22,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.sha }}
 
       - name: Setup Deno
         uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
@@ -39,12 +33,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          raw_tag="${{ inputs.tag || github.ref_name }}"
-          tag="${raw_tag#v}"
           version="$(deno eval "console.log(JSON.parse(Deno.readTextFileSync('deno.json')).version)")"
 
-          if [[ "${tag}" != "${version}" ]]; then
-            echo "Tag (${raw_tag}) does not match deno.json version (${version})."
+          if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
+            echo "Run this workflow from a release tag."
+            exit 1
+          fi
+          if [[ "${GITHUB_REF_NAME}" != "v${version}" ]]; then
+            echo "Tag (${GITHUB_REF_NAME}) does not match version (${version})."
+            exit 1
+          fi
+          if [[ "$(git rev-parse HEAD)" != "${GITHUB_SHA}" ]]; then
+            echo "Checkout does not match the triggering commit."
             exit 1
           fi
 
@@ -61,7 +61,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.sha }}
 
       - name: Setup Deno
         uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
@@ -88,13 +88,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.sha }}
 
       - name: Generate release notes
         shell: bash
         run: |
           set -euo pipefail
-          tag="${{ inputs.tag || github.ref_name }}"
+          tag="${GITHUB_REF_NAME}"
 
           prev_tag="$(
             git tag --list "v*" --sort=-version:refname \
@@ -120,7 +120,7 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
             gh release edit "${RELEASE_TAG}" --notes-file RELEASE_NOTES.md
