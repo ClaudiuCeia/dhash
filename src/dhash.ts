@@ -110,11 +110,17 @@ export const dhash = async (
     );
   }
 
-  const resized = await sharp(file, { limitInputPixels }).grayscale().resize(
-    9,
-    8,
-    { fit: "fill" },
-  ).raw().toBuffer();
+  const oriented = await sharp(file, { limitInputPixels }).autoOrient()
+    .grayscale()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const resized = await sharp(oriented.data, {
+    raw: {
+      width: oriented.info.width,
+      height: oriented.info.height,
+      channels: oriented.info.channels,
+    },
+  }).grayscale().resize(9, 8, { fit: "fill" }).raw().toBuffer();
 
   const out = [];
   for (let row = 0; row < 8; row++) {

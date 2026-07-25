@@ -100,6 +100,27 @@ Deno.test("dhash includes non-square image edges", async () => {
   );
 });
 
+Deno.test("dhash respects EXIF orientation", async () => {
+  const width = 12;
+  const height = 8;
+  const pixels = new Uint8Array(width * height);
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      pixels[row * width + col] = col < 4 ? 20 : row < 4 ? 100 : 240;
+    }
+  }
+
+  const image = sharp(pixels, {
+    raw: { width, height, channels: 1 },
+  });
+  const exifOriented = await image.clone().png().withMetadata({
+    orientation: 6,
+  }).toBuffer();
+  const physicallyRotated = await image.clone().rotate(90).png().toBuffer();
+
+  assertEquals(await dhash(exifOriented), await dhash(physicallyRotated));
+});
+
 Deno.test("comparison", async () => {
   const res = await Promise.all([
     dhash("./tests/dalle.png"),
@@ -112,7 +133,7 @@ Deno.test("comparison", async () => {
 
   assertEquals(compare(res[0], res[1]), 1);
   assertEquals(compare(res[0], res[2]), 7);
-  assertEquals(compare(res[0], res[3]), 23);
+  assertEquals(compare(res[0], res[3]), 22);
   assertEquals(compare(res[0], res[4]), 1);
   assertEquals(compare(res[0], res[5]), 4);
 });
