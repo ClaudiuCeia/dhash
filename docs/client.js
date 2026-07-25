@@ -3,7 +3,7 @@
 
 const MAX_FILES = 20;
 const MAX_BYTES = 10 * 1024 * 1024;
-const CONCURRENCY = 3;
+const CONCURRENCY = 2;
 
 const filesEl = document.getElementById("files");
 const pickEl = document.getElementById("pick");

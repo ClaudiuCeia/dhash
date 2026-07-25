@@ -6,7 +6,8 @@ import deployment from "./deployment.json" with { type: "json" };
 
 const MAX_FILES = 20;
 const MAX_BYTES = 10 * 1024 * 1024;
-const MAX_ACTIVE_HASHES = 4;
+const MAX_INPUT_PIXELS = 16 * 1024 * 1024;
+const MAX_ACTIVE_HASHES = 2;
 const MAX_BODY_READ_MS = 15_000;
 
 type HashFunction = (bytes: Uint8Array) => Promise<string>;
@@ -407,10 +408,15 @@ export function createHandler(
     onError?: (error: unknown) => void;
   } = {},
 ): (req: Request) => Promise<Response> {
-  const hash = options.hash ?? dhash;
   const limiter = options.limiter ??
     createConcurrencyLimiter(MAX_ACTIVE_HASHES);
   const maxBytes = options.maxBytes ?? MAX_BYTES;
+  const hash = options.hash ??
+    ((bytes) =>
+      dhash(bytes, {
+        maxInputBytes: maxBytes,
+        limitInputPixels: MAX_INPUT_PIXELS,
+      }));
   const maxBodyReadMs = options.maxBodyReadMs ?? MAX_BODY_READ_MS;
   const onError = options.onError ??
     ((error) => console.error("Image hashing failed", error));
