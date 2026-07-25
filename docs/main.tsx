@@ -2,6 +2,7 @@
 import { dhash } from "dhash_jsr";
 import { renderToString } from "preact-render-to-string";
 import docsConfig from "./deno.json" with { type: "json" };
+import deployment from "./deployment.json" with { type: "json" };
 
 const MAX_FILES = 20;
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -205,6 +206,7 @@ function Page() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="dhash-deployment" content={deployment.sha} />
         <title>dHash demo</title>
         <meta
           name="description"

@@ -1,5 +1,10 @@
 const baseUrl = Deno.env.get("DEMO_URL")?.replace(/\/$/, "");
 if (!baseUrl) throw new Error("DEMO_URL is required.");
+const expectedDeployment = Deno.env.get("EXPECTED_DEPLOY_SHA");
+if (!expectedDeployment) throw new Error("EXPECTED_DEPLOY_SHA is required.");
+const expectedVersion = Deno.env.get("EXPECTED_VERSION");
+if (!expectedVersion) throw new Error("EXPECTED_VERSION is required.");
+const EXPECTED_FIXTURE_HASH = "0c7725cc0d25746c";
 
 const fixture = await Deno.readFile(
   new URL("../tests/dalle.png", import.meta.url),
@@ -25,6 +30,16 @@ async function smokeTest(): Promise<void> {
   ) {
     throw new Error("Demo does not reference only local styles.");
   }
+  if (
+    !html.includes(
+      `<meta name="dhash-deployment" content="${expectedDeployment}"`,
+    )
+  ) {
+    throw new Error("Demo does not match the expected deployment commit.");
+  }
+  if (!html.includes(`v${expectedVersion}`)) {
+    throw new Error("Demo does not use the expected library version.");
+  }
 
   await expectStatus("/client.js", 200);
   await expectStatus("/styles.css", 200);
@@ -37,7 +52,7 @@ async function smokeTest(): Promise<void> {
   const hashBody = await hashResponse.json() as { hash?: unknown };
   if (
     hashResponse.status !== 200 || typeof hashBody.hash !== "string" ||
-    !/^[0-9a-f]{16}$/.test(hashBody.hash)
+    hashBody.hash !== EXPECTED_FIXTURE_HASH
   ) {
     throw new Error(
       `Hash endpoint returned an invalid response: ${JSON.stringify(hashBody)}`,

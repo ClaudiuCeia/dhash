@@ -18,6 +18,10 @@ Deno.test("demo serves local assets with a restrictive CSP", async () => {
     "default-src 'none'",
   );
   assertStringIncludes(html, 'href="/styles.css"');
+  assertStringIncludes(
+    html,
+    '<meta name="dhash-deployment" content="development"',
+  );
   assertEquals(html.includes("cdn.tailwindcss.com"), false);
 
   const client = await handler(new Request(url("/client.js")));

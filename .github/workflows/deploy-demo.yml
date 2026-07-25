@@ -38,6 +38,24 @@ jobs:
       - name: Check
         run: deno task check
 
+      - name: Prepare deployment marker
+        id: deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          version="$(deno eval "console.log(JSON.parse(Deno.readTextFileSync('docs/deno.json')).imports.dhash_jsr.match(/@\\^?(\\d+\\.\\d+\\.\\d+)/)?.[1] ?? '')")"
+          if [[ -z "${version}" ]]; then
+            echo "Could not determine the demo library version."
+            exit 1
+          fi
+          DEPLOY_SHA="${sha}" deno eval \
+            --allow-env=DEPLOY_SHA \
+            --allow-write=docs/deployment.json \
+            'Deno.writeTextFileSync("docs/deployment.json", JSON.stringify({ sha: Deno.env.get("DEPLOY_SHA") }, null, 2) + "\n")'
+          printf 'sha=%s\n' "${sha}" >> "${GITHUB_OUTPUT}"
+          printf 'version=%s\n' "${version}" >> "${GITHUB_OUTPUT}"
+
       - name: Deploy
         env:
           DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
@@ -46,9 +64,11 @@ jobs:
       - name: Smoke test
         env:
           DEMO_URL: https://dhash.claudiuceia.deno.net
+          EXPECTED_DEPLOY_SHA: ${{ steps.deployment.outputs.sha }}
+          EXPECTED_VERSION: ${{ steps.deployment.outputs.version }}
         run: >-
           deno run
-          --allow-env=DEMO_URL
+          --allow-env=DEMO_URL,EXPECTED_DEPLOY_SHA,EXPECTED_VERSION
           --allow-net=dhash.claudiuceia.deno.net
           --allow-read=tests/dalle.png
           scripts/smoke_demo.ts
