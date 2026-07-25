@@ -157,10 +157,25 @@ jobs:
             --output /dev/null --write-out "%{http_code}" "${endpoint}")"
 
           case "${status}" in
-            200) echo "@claudiu-ceia/dhash@${version} already exists." ;;
+            200)
+              deno run --allow-read --allow-net=jsr.io \
+                scripts/verify_jsr.ts "${version}"
+              exit 0
+              ;;
             404) deno publish ;;
             *) echo "Unexpected JSR registry status: ${status}"; exit 1 ;;
           esac
+
+          for attempt in {1..30}; do
+            if deno run --allow-read --allow-net=jsr.io \
+              scripts/verify_jsr.ts "${version}"; then
+              exit 0
+            fi
+            echo "Waiting for JSR propagation (${attempt}/30)."
+            sleep 10
+          done
+          echo "JSR package did not become verifiable within five minutes."
+          exit 1
 
   release:
     needs: publish_jsr
