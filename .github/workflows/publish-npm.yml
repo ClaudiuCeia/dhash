@@ -21,6 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           ref: ${{ github.sha }}
 
       - name: Setup Deno
@@ -54,6 +55,11 @@ jobs:
           fi
           if [[ "$(git rev-parse HEAD)" != "${GITHUB_SHA}" ]]; then
             echo "Checkout does not match the triggering commit."
+            exit 1
+          fi
+          git fetch --no-tags origin refs/heads/main
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" FETCH_HEAD; then
+            echo "Release tag is not contained in main."
             exit 1
           fi
 
