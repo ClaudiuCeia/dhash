@@ -40,6 +40,10 @@ jobs:
           set -euo pipefail
           version="$(deno eval "console.log(JSON.parse(Deno.readTextFileSync('deno.json')).version)")"
 
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Only stable semantic versions can be released."
+            exit 1
+          fi
           if [[ "${GITHUB_REF_TYPE}" != "tag" ]]; then
             echo "Run this workflow from a release tag."
             exit 1
@@ -52,6 +56,11 @@ jobs:
             echo "Checkout does not match the triggering commit."
             exit 1
           fi
+
+      - name: Check source and JSR package
+        run: |
+          deno task check
+          deno publish --dry-run
 
       - name: Pack npm package
         run: deno task pack:npm
@@ -67,7 +76,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  publish:
+  publish_npm:
     needs: validate
     runs-on: ubuntu-latest
     permissions:
@@ -91,9 +100,132 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
+          set -euo pipefail
           version="${RELEASE_TAG#v}"
-          if npm view "@claudiu-ceia/dhash@${version}" version >/dev/null 2>&1; then
-            echo "@claudiu-ceia/dhash@${version} is already published to npm."
+          metadata="${RUNNER_TEMP}/npm-version.json"
+          endpoint="https://registry.npmjs.org/@claudiu-ceia%2fdhash/${version}"
+          status="$(curl --silent --show-error --location --retry 3 \
+            --output "${metadata}" --write-out "%{http_code}" "${endpoint}")"
+
+          case "${status}" in
+            200) echo "@claudiu-ceia/dhash@${version} already exists." ;;
+            404) npm publish dhash.tgz --access public ;;
+            *) echo "Unexpected npm registry status: ${status}"; exit 1 ;;
+          esac
+
+          local_integrity="sha512-$(openssl dgst -sha512 -binary dhash.tgz | openssl base64 -A)"
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error --location \
+              --output "${metadata}" "${endpoint}"; then
+              published_integrity="$(jq -er '.dist.integrity' "${metadata}")"
+              if [[ "${published_integrity}" != "${local_integrity}" ]]; then
+                echo "Published npm package differs from the tested artifact."
+                exit 1
+              fi
+              exit 0
+            fi
+            echo "Waiting for npm propagation (${attempt}/30)."
+            sleep 10
+          done
+          echo "npm package did not become visible within five minutes."
+          exit 1
+
+  publish_jsr:
+    needs: publish_npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: v2.x
+
+      - name: Publish to JSR
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          endpoint="https://jsr.io/@claudiu-ceia/dhash/${version}_meta.json"
+          status="$(curl --silent --show-error --location --retry 3 \
+            --output /dev/null --write-out "%{http_code}" "${endpoint}")"
+
+          case "${status}" in
+            200) echo "@claudiu-ceia/dhash@${version} already exists." ;;
+            404) deno publish ;;
+            *) echo "Unexpected JSR registry status: ${status}"; exit 1 ;;
+          esac
+
+  release:
+    needs: publish_jsr
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Wait for registries
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          npm_url="https://registry.npmjs.org/@claudiu-ceia%2fdhash/${version}"
+          jsr_url="https://jsr.io/@claudiu-ceia/dhash/${version}_meta.json"
+
+          for attempt in {1..30}; do
+            npm_status="$(curl --silent --show-error --location \
+              --output /dev/null --write-out "%{http_code}" "${npm_url}" || true)"
+            jsr_status="$(curl --silent --show-error --location \
+              --output /dev/null --write-out "%{http_code}" "${jsr_url}" || true)"
+            if [[ "${npm_status}" == "200" && "${jsr_status}" == "200" ]]; then
+              exit 0
+            fi
+            echo "Waiting for registries: npm=${npm_status}, JSR=${jsr_status} (${attempt}/30)."
+            sleep 10
+          done
+          echo "Packages did not become visible within five minutes."
+          exit 1
+
+      - name: Generate release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          prev_tag="$(git describe --tags --abbrev=0 --match "v*" "${GITHUB_SHA}^" 2>/dev/null || true)"
+
+          {
+            echo "# ${GITHUB_REF_NAME}"
+            echo
+            if [[ -n "${prev_tag}" ]]; then
+              echo "Changes since ${prev_tag}:"
+              echo
+              git log --no-merges --pretty=format:"- %s (%h)" "${prev_tag}..${GITHUB_SHA}"
+            else
+              echo "Changes:"
+              echo
+              git log --no-merges --pretty=format:"- %s (%h)" "${GITHUB_SHA}"
+            fi
+            echo
+          } > RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release edit "${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md
           else
-            npm publish dhash.tgz --access public
+            gh release create "${GITHUB_REF_NAME}" \
+              --target "${GITHUB_SHA}" \
+              --title "${GITHUB_REF_NAME}" \
+              --notes-file RELEASE_NOTES.md
           fi
