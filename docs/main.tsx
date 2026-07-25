@@ -6,6 +6,7 @@ import docsConfig from "./deno.json" with { type: "json" };
 const MAX_FILES = 20;
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_ACTIVE_HASHES = 4;
+const MAX_BODY_READ_MS = 15_000;
 
 type HashFunction = (bytes: Uint8Array) => Promise<string>;
 type ConcurrencyLimiter = {
@@ -33,16 +34,27 @@ export function createConcurrencyLimiter(maximum: number): ConcurrencyLimiter {
 }
 
 class PayloadTooLargeError extends Error {}
+class BodyReadTimeoutError extends Error {}
 
 async function readBodyBounded(
   request: Request,
   maximum: number,
+  timeoutMs: number,
 ): Promise<Uint8Array> {
   if (request.body === null) return new Uint8Array();
 
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    void reader.cancel("request body timed out").catch(() => {});
+  }, timeoutMs);
+  const abort = () => {
+    void reader.cancel(request.signal.reason).catch(() => {});
+  };
+  request.signal.addEventListener("abort", abort, { once: true });
 
   try {
     while (true) {
@@ -57,7 +69,10 @@ async function readBodyBounded(
       chunks.push(value);
       total += value.byteLength;
     }
+    if (timedOut) throw new BodyReadTimeoutError();
   } finally {
+    clearTimeout(timeout);
+    request.signal.removeEventListener("abort", abort);
     reader.releaseLock();
   }
 
@@ -386,6 +401,7 @@ export function createHandler(
     hash?: HashFunction;
     limiter?: ConcurrencyLimiter;
     maxBytes?: number;
+    maxBodyReadMs?: number;
     onError?: (error: unknown) => void;
   } = {},
 ): (req: Request) => Promise<Response> {
@@ -393,6 +409,7 @@ export function createHandler(
   const limiter = options.limiter ??
     createConcurrencyLimiter(MAX_ACTIVE_HASHES);
   const maxBytes = options.maxBytes ?? MAX_BYTES;
+  const maxBodyReadMs = options.maxBodyReadMs ?? MAX_BODY_READ_MS;
   const onError = options.onError ??
     ((error) => console.error("Image hashing failed", error));
 
@@ -431,7 +448,7 @@ export function createHandler(
       }
 
       try {
-        const bytes = await readBodyBounded(req, maxBytes);
+        const bytes = await readBodyBounded(req, maxBytes, maxBodyReadMs);
         if (bytes.byteLength === 0) {
           return json({ error: "Empty request body." }, 400);
         }
@@ -439,6 +456,9 @@ export function createHandler(
       } catch (err) {
         if (err instanceof PayloadTooLargeError) {
           return json({ error: "Payload too large (max 10 MiB)." }, 413);
+        }
+        if (err instanceof BodyReadTimeoutError) {
+          return json({ error: "Request body timed out." }, 408);
         }
         onError(err);
         return json({ error: "Invalid or unsupported image." }, 422);

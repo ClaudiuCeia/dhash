@@ -145,6 +145,40 @@ Deno.test("demo rejects work above its concurrency limit", async () => {
   assertEquals(available.status, 200);
 });
 
+Deno.test("demo times out stalled uploads and releases their slot", async () => {
+  let cancelled = false;
+  const handler = createHandler({
+    limiter: createConcurrencyLimiter(1),
+    maxBodyReadMs: 10,
+    hash: () => Promise.resolve("0123456789abcdef"),
+  });
+  const stalled = await handler(
+    new Request(url("/hash"), {
+      method: "POST",
+      body: new ReadableStream<Uint8Array>({
+        pull() {
+          return new Promise(() => {});
+        },
+        cancel() {
+          cancelled = true;
+        },
+      }),
+    }),
+  );
+
+  assertEquals(stalled.status, 408);
+  assertEquals(await jsonBody(stalled), { error: "Request body timed out." });
+  assertEquals(cancelled, true);
+
+  const available = await handler(
+    new Request(url("/hash"), {
+      method: "POST",
+      body: new Uint8Array([1]),
+    }),
+  );
+  assertEquals(available.status, 200);
+});
+
 Deno.test("demo has no multipart hash endpoint", async () => {
   const response = await createHandler()(
     new Request(url("/api/hash"), {
