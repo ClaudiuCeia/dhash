@@ -265,7 +265,7 @@ function Page() {
             </header>
 
             <section class="mt-10 grid gap-6 lg:grid-cols-[1fr_400px]">
-              <div class="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-soft backdrop-blur sm:p-7">
+              <div class="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-xl backdrop-blur sm:p-7">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <div class="min-w-0">
                     <h2 class="text-base font-semibold text-slate-900">
@@ -328,7 +328,7 @@ function Page() {
                 />
               </div>
 
-              <aside class="rounded-3xl border border-slate-200/70 bg-white/55 p-6 shadow-soft backdrop-blur sm:p-7">
+              <aside class="rounded-3xl border border-slate-200/70 bg-white/55 p-6 shadow-xl backdrop-blur sm:p-7">
                 <h2 class="text-base font-semibold text-slate-900">
                   How it works
                 </h2>
