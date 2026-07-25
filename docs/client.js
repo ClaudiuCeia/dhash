@@ -267,17 +267,29 @@ function render() {
       "group relative rounded-2xl border bg-white/80 p-4 shadow-sm backdrop-blur transition-shadow";
     const active = pending
       ? " opacity-50 cursor-not-allowed border-slate-200"
-      : " cursor-pointer border-slate-200 hover:shadow-md";
+      : " cursor-pointer border-slate-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300";
     const anchored = (idx === anchor)
       ? " ring-2 ring-emerald-300 border-emerald-200 shadow-[0_18px_45px_rgba(16,185,129,0.18)]"
       : "";
     div.className = base + active + anchored;
+    div.setAttribute("role", "button");
+    div.setAttribute("aria-disabled", String(pending));
+    div.setAttribute("aria-pressed", String(idx === anchor));
+    div.setAttribute("aria-label", "Use " + it.name + " as reference image");
+    div.tabIndex = pending ? -1 : 0;
 
     if (!pending) {
-      div.addEventListener("click", () => {
+      const selectReference = () => {
         anchor = idx;
         recomputeDistances();
         render();
+      };
+      div.addEventListener("click", selectReference);
+      div.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectReference();
+        }
       });
     }
 
@@ -295,6 +307,7 @@ function render() {
       "h-24 w-24 shrink-0 rounded-xl border border-slate-300 bg-slate-100 shadow-inner";
     canvas.width = 96;
     canvas.height = 96;
+    canvas.setAttribute("aria-hidden", "true");
     if (it.hash) drawHash(canvas, it.hash);
 
     row.appendChild(img);

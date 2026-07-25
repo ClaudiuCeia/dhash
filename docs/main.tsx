@@ -261,6 +261,8 @@ function Page() {
                   accept="image/*"
                   multiple
                   class="sr-only"
+                  aria-label="Choose image files"
+                  tabIndex={-1}
                 />
 
                 <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -273,7 +275,12 @@ function Page() {
                   </div>
                 </div>
 
-                <div id="errors" class="mt-4" />
+                <div
+                  id="errors"
+                  class="mt-4"
+                  role="alert"
+                  aria-live="assertive"
+                />
 
                 <div
                   id="grid"
@@ -315,8 +322,8 @@ function Page() {
                     <li class="flex gap-2">
                       <span class="mt-[6px] inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
                       <span>
-                        Click any computed card to set the reference image and
-                        re-sort.
+                        Select any computed card to set the reference image and
+                        re-sort. Cards support mouse and keyboard input.
                       </span>
                     </li>
                   </ul>
