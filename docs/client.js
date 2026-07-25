@@ -267,6 +267,8 @@ function drawHash(canvas, hash) {
 
 function render() {
   const sorted = sortByDistance();
+  const focusedIndex = document.activeElement?.closest?.("[data-item-index]")
+    ?.dataset.itemIndex;
   gridEl.innerHTML = "";
 
   for (const { it, idx } of sorted) {
@@ -285,6 +287,7 @@ function render() {
     div.setAttribute("aria-disabled", String(pending));
     div.setAttribute("aria-pressed", String(idx === anchor));
     div.setAttribute("aria-label", "Use " + it.name + " as reference image");
+    div.dataset.itemIndex = String(idx);
     div.tabIndex = pending ? -1 : 0;
 
     if (!pending) {
@@ -356,5 +359,9 @@ function render() {
     div.appendChild(row);
     div.appendChild(meta);
     gridEl.appendChild(div);
+  }
+
+  if (focusedIndex !== undefined) {
+    gridEl.querySelector(`[data-item-index="${focusedIndex}"]`)?.focus();
   }
 }
