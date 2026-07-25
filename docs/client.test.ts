@@ -118,6 +118,31 @@ Deno.test("client preserves card focus and ignores cancelled runs", async () => 
       window.document.getElementById("grid")!.textContent.includes("first.png"),
       false,
     );
+
+    const failed = new window.File([new Uint8Array([3])], "failed.png", {
+      type: "image/png",
+    });
+    const failedSelection = new window.DataTransfer();
+    failedSelection.items.add(failed);
+    files.files = failedSelection.files as never;
+    files.dispatchEvent(new window.Event("change") as never);
+    await waitFor(() => pending.length === 3);
+    pending[2].resolve(Response.json({ error: "Invalid image." }, {
+      status: 422,
+    }));
+    await waitFor(() =>
+      window.document.getElementById("status")?.textContent.includes(
+        "Some files failed",
+      ) ?? false
+    );
+    assertEquals(
+      window.document.querySelector('[aria-pressed="true"]'),
+      null,
+    );
+    assertEquals(
+      window.document.getElementById("grid")!.textContent.includes("reference"),
+      false,
+    );
   } finally {
     Object.assign(globalThis, {
       document: originalDocument,

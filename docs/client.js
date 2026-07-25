@@ -135,7 +135,9 @@ function hammingHex(a, b) {
 function recomputeDistances() {
   const ref = items[anchor] && items[anchor].hash;
   for (let i = 0; i < items.length; i++) {
-    items[i].distance = (i === anchor) ? 0 : hammingHex(ref, items[i].hash);
+    items[i].distance = (i === anchor && ref)
+      ? 0
+      : hammingHex(ref, items[i].hash);
   }
 }
 
@@ -274,18 +276,19 @@ function render() {
   for (const { it, idx } of sorted) {
     const div = document.createElement("div");
     const pending = !it.hash;
+    const isAnchor = idx === anchor && !!it.hash;
     const base =
       "group relative rounded-2xl border bg-white/80 p-4 shadow-sm backdrop-blur transition-shadow";
     const active = pending
       ? " opacity-50 cursor-not-allowed border-slate-200"
       : " cursor-pointer border-slate-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300";
-    const anchored = (idx === anchor)
+    const anchored = isAnchor
       ? " ring-2 ring-emerald-300 border-emerald-200 shadow-[0_18px_45px_rgba(16,185,129,0.18)]"
       : "";
     div.className = base + active + anchored;
     div.setAttribute("role", "button");
     div.setAttribute("aria-disabled", String(pending));
-    div.setAttribute("aria-pressed", String(idx === anchor));
+    div.setAttribute("aria-pressed", String(isAnchor));
     div.setAttribute("aria-label", "Use " + it.name + " as reference image");
     div.dataset.itemIndex = String(idx);
     div.tabIndex = pending ? -1 : 0;
@@ -348,7 +351,7 @@ function render() {
 
     meta.appendChild(kv);
 
-    if (idx === anchor) {
+    if (isAnchor) {
       const badge = document.createElement("div");
       badge.className =
         "mt-3 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800";
