@@ -157,22 +157,26 @@ async function computeOne(it) {
   const c = new AbortController();
   controllers.push(c);
 
-  const buf = await it.file.arrayBuffer();
-  const res = await fetch("/hash", {
-    method: "POST",
-    headers: { "content-type": "application/octet-stream" },
-    body: buf,
-    signal: c.signal,
-  });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) {
-    const msg = (data && data.error) ? data.error : ("HTTP " + res.status);
-    throw new Error(msg);
+  try {
+    const buf = await it.file.arrayBuffer();
+    const res = await fetch("/hash", {
+      method: "POST",
+      headers: { "content-type": "application/octet-stream" },
+      body: buf,
+      signal: c.signal,
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = (data && data.error) ? data.error : ("HTTP " + res.status);
+      throw new Error(msg);
+    }
+    if (!data || typeof data.hash !== "string") {
+      throw new Error("Bad response from server.");
+    }
+    return data.hash;
+  } finally {
+    controllers = controllers.filter((controller) => controller !== c);
   }
-  if (!data || typeof data.hash !== "string") {
-    throw new Error("Bad response from server.");
-  }
-  return data.hash;
 }
 
 async function computeAll(localRun) {
@@ -196,7 +200,6 @@ async function computeAll(localRun) {
       it.inFlight = true;
       render();
 
-      let shouldAbort = false;
       try {
         it.hash = await computeOne(it);
       } catch (e) {
@@ -204,14 +207,19 @@ async function computeAll(localRun) {
         it.err = String(e && e.message ? e.message : e);
       } finally {
         it.inFlight = false;
-        shouldAbort = localRun !== runId;
-
-        const computed = items.filter((x) => !!x.hash).length;
-        setStatus("Computed " + computed + " / " + items.length + " hashes...");
-        recomputeDistances();
-        render();
+        if (localRun === runId) {
+          const computed = items.filter((x) => !!x.hash).length;
+          if (!items[anchor] || !items[anchor].hash) {
+            const firstSuccessful = items.findIndex((item) => !!item.hash);
+            if (firstSuccessful !== -1) anchor = firstSuccessful;
+          }
+          setStatus(
+            "Computed " + computed + " / " + items.length + " hashes...",
+          );
+          recomputeDistances();
+          render();
+        }
       }
-      if (shouldAbort) return;
     }
   }
 
