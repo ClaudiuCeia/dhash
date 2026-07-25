@@ -10,10 +10,10 @@ library.
 
 ## What It Does
 
-1. Upload up to 20 images (max 10MB each).
+1. Upload up to 20 images (max 10 MiB each).
 2. Computes a 64-bit dHash for each image by calling `POST /hash`.
-3. Sorts images by similarity (Hamming distance) to a reference image you set by
-   clicking a card.
+3. Sorts images by similarity (Hamming distance) to a reference image you set
+   with a mouse or keyboard.
 
 Everything is in-memory; no persistence.
 
@@ -22,7 +22,12 @@ Everything is in-memory; no persistence.
 From the repo root:
 
 ```bash
-deno run -A --config docs/deno.json docs/main.ts
+deno run --config docs/deno.json \
+  --allow-net=0.0.0.0:8000 \
+  --allow-read=docs,node_modules \
+  --allow-ffi \
+  --allow-env \
+  docs/main.ts
 ```
 
 Then open `http://localhost:8000/`.

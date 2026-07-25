@@ -5,8 +5,7 @@ _A `dhash` implementation for Deno and Node.js._
 A fast algorithm that allows checking if two images are "kind of" the same (the
 same source image, slightly modified). Examples:
 
-- A resized, compressed, slightly cropped, or color-altered image compared with
-  the original
+- A resized, compressed, or color-altered image compared with the original
 - A watermarked image versus its source
 - Meme images (mostly the same template, different text)
 
@@ -39,16 +38,19 @@ npm install @claudiu-ceia/dhash
 ```
 
 The JSR package supports Deno 2.x. The npm package is ESM-only and supports
-Node.js 22 or newer.
+Node.js 22 or newer. Images are auto-oriented from metadata, converted to
+grayscale, and resized in full to 9x8 without cropping.
 
 You can compare dhash values by simply computing the Hamming distance between
 them:
 
 - A distance of 0 represents an identical, or very similar image
-- A distance greater than 10 means that you're most likely dealing with a
-  different image
-- A distance between 1 and 10 may indicate that you're dealing with variations
-  of the same base image
+- A distance greater than 10 often indicates a different image
+- A distance between 1 and 10 may indicate variations of the same base image
+
+These thresholds are starting points, not guarantees; calibrate them against
+your data. dHash is not crop or translation invariant. For example, the cropped
+fixture in this repository has a distance of 22 from its source.
 
 ```ts
 import { compare, dhash } from "@claudiu-ceia/dhash";
@@ -65,15 +67,32 @@ Bit convention: this implementation sets bit `1` when the pixel intensity
 increases left-to-right (`left < right`). Use `dhash(src, { invert: true })` if
 you need the opposite convention to match another implementation.
 
+With Deno, hashing needs read access to Sharp's native package plus FFI and
+environment access. Path inputs additionally need read access to the image, and
+`save()` needs write access to its destination. Grant only the paths required by
+your application.
+
 ## API
 
-In addition to `dhash()` and `compare()`:
-
 ```ts
-toAscii(hash: string, chars?: [string, string]): string
+dhash(
+  source: string | Uint8Array,
+  options?: DHashOptions,
+): Promise<string>
+compare(hash1: string, hash2: string): number
+invertHash(hash: string): string
+toAscii(hash: string, chars?: readonly [string, string]): string
 raw(hash: string): Promise<Uint8Array> // PNG bytes for the 8x8 fingerprint
 save(hash: string, filePath: string): Promise<void> // writes `${filePath}.png`
 ```
+
+`DHashOptions` supports `invert`, `maxInputBytes`, and `limitInputPixels`.
+Encoded inputs default to a 64 MiB limit and decoded inputs to 64 megapixels;
+set either limit to `false` only when the caller provides equivalent controls.
+
+Hash helpers accept 1 to 16 case-insensitive hexadecimal characters. Values
+passed to `compare()` must use the same textual length. `invertHash()` returns a
+zero-padded 16-character hash.
 
 `toAscii()` always renders an 8x8 matrix (64 bits); leading zero bits are
 preserved.

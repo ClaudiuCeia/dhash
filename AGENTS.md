@@ -57,9 +57,8 @@ function/type, export it from `mod.ts` and add/adjust tests under `tests/`.
 - Build the npm package: `deno task pack:npm`.
 - Publish to JSR: `deno publish` (auth via token/login).
 - Publish to npm: `deno task pack:npm` then `npm publish dhash.tgz`.
-- CI publish: push a semver tag matching `deno.json`’s version (e.g. `v0.2.0`).
-  GitHub Actions will run checks, publish to JSR via its tokenless GitHub
-  Actions flow (OIDC), and publish to npm via trusted publishing (OIDC). Both
-  registries must trust this GitHub repository and their respective workflow.
-- CI also creates a GitHub Release for the tag using release notes generated
-  from the git log since the previous `v*` tag.
+- CI publish: push a stable semver tag matching `deno.json`’s version (e.g.
+  `v0.2.0`). The `publish-npm.yml` workflow validates once, publishes the tested
+  npm artifact through trusted publishing (OIDC), publishes to JSR through its
+  tokenless GitHub Actions flow, then creates the GitHub Release using notes
+  generated from the git log since the previous `v*` tag.
