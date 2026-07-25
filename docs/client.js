@@ -93,7 +93,8 @@ filesEl.addEventListener("change", () => {
   clearEl.disabled = false;
   fileLabelEl.textContent = items.length + " image(s) selected";
   if (skipped > 0) {
-    msg += (msg ? " " : "") + skipped + " file(s) were >10MB and were skipped.";
+    msg += (msg ? " " : "") + skipped +
+      " file(s) were >10 MiB and were skipped.";
   }
   if (msg) setError(msg);
 

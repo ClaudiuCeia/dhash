@@ -218,10 +218,9 @@ function Page() {
                   <span class="font-semibold text-slate-900">{MAX_FILES}</span>
                   {" "}
                   images (max{" "}
-                  <span class="font-semibold text-slate-900">10MB</span>{" "}
+                  <span class="font-semibold text-slate-900">10 MiB</span>{" "}
                   each). We compute 64-bit dHashes and sort by similarity
-                  (Hamming distance) to a reference image you select by
-                  clicking.
+                  (Hamming distance) to a reference image you select.
                 </p>
               </div>
               <nav class="flex shrink-0 items-center gap-2">
@@ -419,7 +418,7 @@ export function createHandler(
         return json({ error: "Empty request body." }, 400);
       }
       if (contentLength !== null && contentLength > maxBytes) {
-        return json({ error: "Payload too large (max 10MB)." }, 413);
+        return json({ error: "Payload too large (max 10 MiB)." }, 413);
       }
       const release = limiter.tryAcquire();
       if (release === null) {
@@ -439,7 +438,7 @@ export function createHandler(
         return json({ hash: await hash(bytes) });
       } catch (err) {
         if (err instanceof PayloadTooLargeError) {
-          return json({ error: "Payload too large (max 10MB)." }, 413);
+          return json({ error: "Payload too large (max 10 MiB)." }, 413);
         }
         onError(err);
         return json({ error: "Invalid or unsupported image." }, 422);
