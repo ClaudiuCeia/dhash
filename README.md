@@ -51,7 +51,7 @@ them:
 
 These thresholds are starting points, not guarantees; calibrate them against
 your data. dHash is not crop or translation invariant. For example, the cropped
-fixture in this repository has a distance of 22 from its source.
+fixture in this repository has a distance of 23 from its source.
 
 ```ts
 import { compare, dhash } from "@claudiu-ceia/dhash";
