@@ -51,8 +51,6 @@ jobs:
             exit 1
           fi
           DEPLOY_SHA="${sha}" deno eval \
-            --allow-env=DEPLOY_SHA \
-            --allow-write=docs/deployment.json \
             'Deno.writeTextFileSync("docs/deployment.json", JSON.stringify({ sha: Deno.env.get("DEPLOY_SHA") }, null, 2) + "\n")'
           printf 'sha=%s\n' "${sha}" >> "${GITHUB_OUTPUT}"
           printf 'version=%s\n' "${version}" >> "${GITHUB_OUTPUT}"
