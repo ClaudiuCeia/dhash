@@ -1,5 +1,5 @@
 import sharp from "sharp";
-import { stat, writeFile } from "node:fs/promises";
+import { open, writeFile } from "node:fs/promises";
 import { normalize, resolve } from "node:path";
 
 const DEFAULT_MAX_INPUT_BYTES = 64 * 1024 * 1024;
@@ -34,6 +34,43 @@ export type DHashOptions = {
 
 const MASK_64 = (1n << 64n) - 1n;
 const HASH_PATTERN = /^[0-9a-f]{1,16}$/i;
+const READ_CHUNK_BYTES = 64 * 1024;
+
+const readFileBounded = async (
+  path: string,
+  maximum: number | false,
+): Promise<Uint8Array> => {
+  const file = await open(path, "r");
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  try {
+    while (true) {
+      const available = maximum === false
+        ? READ_CHUNK_BYTES
+        : Math.min(READ_CHUNK_BYTES, maximum - total + 1);
+      const chunk = new Uint8Array(available);
+      const { bytesRead } = await file.read(chunk, 0, chunk.byteLength, null);
+      if (bytesRead === 0) break;
+
+      total += bytesRead;
+      if (maximum !== false && total > maximum) {
+        throw new RangeError(`Image exceeds the ${maximum}-byte input limit.`);
+      }
+      chunks.push(chunk.subarray(0, bytesRead));
+    }
+  } finally {
+    await file.close();
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
+};
 
 const parseHash = (hash: string): bigint => {
   if (!HASH_PATTERN.test(hash)) {
@@ -91,13 +128,7 @@ export const dhash = async (
     const resolvedPath = resolve(normalize(pathOrSrc));
 
     try {
-      const fileInfo = await stat(resolvedPath);
-      if (maxInputBytes !== false && fileInfo.size > maxInputBytes) {
-        throw new RangeError(
-          `Image exceeds the ${maxInputBytes}-byte input limit.`,
-        );
-      }
-      file = resolvedPath;
+      file = await readFileBounded(resolvedPath, maxInputBytes);
     } catch (cause) {
       if (cause instanceof RangeError) throw cause;
       throw new Error(`Failed to open "${resolvedPath}"`, { cause });
@@ -110,18 +141,33 @@ export const dhash = async (
     );
   }
 
-  const oriented = await sharp(file, { limitInputPixels }).autoOrient()
-    .flatten({ background: "white" })
-    .grayscale()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const resized = await sharp(oriented.data, {
-    raw: {
-      width: oriented.info.width,
-      height: oriented.info.height,
-      channels: oriented.info.channels,
-    },
-  }).grayscale().resize(9, 8, { fit: "fill" }).raw().toBuffer();
+  const image = sharp(file, { limitInputPixels });
+  const { orientation } = await image.metadata();
+  switch (orientation) {
+    case 2:
+      image.flop();
+      break;
+    case 3:
+      image.rotate(180);
+      break;
+    case 4:
+      image.flip();
+      break;
+    case 5:
+      image.flip().rotate(90);
+      break;
+    case 6:
+      image.rotate(90);
+      break;
+    case 7:
+      image.flop().rotate(90);
+      break;
+    case 8:
+      image.rotate(270);
+      break;
+  }
+  const resized = await image.flatten({ background: "white" }).grayscale()
+    .resize(9, 8, { fit: "fill" }).raw().toBuffer();
 
   const out = [];
   for (let row = 0; row < 8; row++) {

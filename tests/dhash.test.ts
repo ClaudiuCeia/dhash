@@ -5,7 +5,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { resolve } from "node:path";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import { compare, dhash, invertHash, raw, save, toAscii } from "../mod.ts";
 
 Deno.test("sample", async () => {
@@ -100,7 +100,7 @@ Deno.test("dhash includes non-square image edges", async () => {
   );
 });
 
-Deno.test("dhash respects EXIF orientation", async () => {
+Deno.test("dhash respects every EXIF orientation", async () => {
   const width = 12;
   const height = 8;
   const pixels = new Uint8Array(width * height);
@@ -113,12 +113,26 @@ Deno.test("dhash respects EXIF orientation", async () => {
   const image = sharp(pixels, {
     raw: { width, height, channels: 1 },
   });
-  const exifOriented = await image.clone().png().withMetadata({
-    orientation: 6,
-  }).toBuffer();
-  const physicallyRotated = await image.clone().rotate(90).png().toBuffer();
+  const transforms = [
+    (source: Sharp) => source,
+    (source: Sharp) => source.flop(),
+    (source: Sharp) => source.rotate(180),
+    (source: Sharp) => source.flip(),
+    (source: Sharp) => source.flip().rotate(90),
+    (source: Sharp) => source.rotate(90),
+    (source: Sharp) => source.flop().rotate(90),
+    (source: Sharp) => source.rotate(270),
+  ];
 
-  assertEquals(await dhash(exifOriented), await dhash(physicallyRotated));
+  for (let orientation = 1; orientation <= 8; orientation++) {
+    const exifOriented = await image.clone().png().withMetadata({ orientation })
+      .toBuffer();
+    const physicallyOriented = await transforms[orientation - 1](
+      image.clone(),
+    ).png().toBuffer();
+
+    assertEquals(await dhash(exifOriented), await dhash(physicallyOriented));
+  }
 });
 
 Deno.test("dhash composites transparent pixels on white", async () => {
@@ -197,7 +211,7 @@ Deno.test("comparison", async () => {
 
   assertEquals(compare(res[0], res[1]), 1);
   assertEquals(compare(res[0], res[2]), 7);
-  assertEquals(compare(res[0], res[3]), 22);
+  assertEquals(compare(res[0], res[3]), 23);
   assertEquals(compare(res[0], res[4]), 1);
   assertEquals(compare(res[0], res[5]), 4);
 });
