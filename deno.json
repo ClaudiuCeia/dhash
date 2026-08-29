@@ -1,6 +1,6 @@
 {
   "name": "@claudiu-ceia/dhash",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "MIT",
   "exports": "./mod.ts",
   "nodeModulesDir": "auto",
@@ -17,7 +17,7 @@
     ]
   },
   "tasks": {
-    "build:css": "deno run --config docs/deno.json --frozen -A npm:tailwindcss@3.4.17 -i docs/tailwind.css -o docs/styles.css --content docs/main.tsx,docs/client.js --minify",
+    "build:css": "deno run --config docs/deno.json --frozen -A npm:@tailwindcss/cli@4.3.3 -i docs/tailwind.css -o docs/styles.css --minify",
     "check": "deno task check:css && deno fmt --check && deno lint && deno check mod.ts scripts/pack_npm.ts scripts/test_npm.ts scripts/verify_jsr.ts scripts/smoke_demo.ts && deno check --config docs/deno.json docs/main.ts && deno task test",
     "check:css": "deno task build:css && git diff --exit-code -- docs/styles.css",
     "check:npm": "deno run -A scripts/test_npm.ts",
@@ -33,6 +33,6 @@
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19",
-    "sharp": "npm:sharp@0.35.3"
+    "sharp": "npm:sharp@0.35.4"
   }
 }

@@ -37,7 +37,7 @@ function escapeHtml(s) {
 
 function setError(msg) {
   errorsEl.innerHTML = msg
-    ? '<div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 shadow-sm">' +
+    ? '<div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900 shadow-xs">' +
       escapeHtml(msg) + "</div>"
     : "";
 }
@@ -278,10 +278,10 @@ function render() {
     const pending = !it.hash;
     const isAnchor = idx === anchor && !!it.hash;
     const base =
-      "group relative rounded-2xl border bg-white/80 p-4 shadow-sm backdrop-blur transition-shadow";
+      "group relative rounded-2xl border bg-white/80 p-4 shadow-xs backdrop-blur-sm transition-shadow";
     const active = pending
       ? " opacity-50 cursor-not-allowed border-slate-200"
-      : " cursor-pointer border-slate-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300";
+      : " cursor-pointer border-slate-200 hover:shadow-md focus:outline-hidden focus:ring-2 focus:ring-emerald-300";
     const anchored = isAnchor
       ? " ring-2 ring-emerald-300 border-emerald-200 shadow-[0_18px_45px_rgba(16,185,129,0.18)]"
       : "";

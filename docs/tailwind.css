@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source(none);
+@source "./main.tsx";
+@source "./client.js";
 
 @layer base {
   * {

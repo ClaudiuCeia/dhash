@@ -246,7 +246,7 @@ function Page() {
                   href="https://github.com/ClaudiuCeia/dhash"
                   target="_blank"
                   rel="noreferrer"
-                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/75 text-slate-900 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/75 text-slate-900 shadow-xs transition hover:shadow-md focus:outline-hidden focus:ring-2 focus:ring-emerald-300"
                   aria-label="GitHub repository"
                   title="GitHub"
                 >
@@ -256,7 +256,7 @@ function Page() {
                   href="https://jsr.io/@claudiu-ceia/dhash"
                   target="_blank"
                   rel="noreferrer"
-                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/75 text-slate-900 shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/75 text-slate-900 shadow-xs transition hover:shadow-md focus:outline-hidden focus:ring-2 focus:ring-emerald-300"
                   aria-label="JSR package"
                   title="JSR"
                 >
@@ -266,7 +266,7 @@ function Page() {
             </header>
 
             <section class="mt-10 grid gap-6 lg:grid-cols-[1fr_400px]">
-              <div class="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-xl backdrop-blur sm:p-7">
+              <div class="rounded-3xl border border-slate-200/70 bg-white/60 p-6 shadow-xl backdrop-blur-sm sm:p-7">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <div class="min-w-0">
                     <h2 class="text-base font-semibold text-slate-900">
@@ -281,14 +281,14 @@ function Page() {
                     <button
                       id="pick"
                       type="button"
-                      class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition hover:shadow-md focus:outline-hidden focus:ring-2 focus:ring-emerald-300"
                     >
                       Choose images
                     </button>
                     <button
                       id="clear"
                       type="button"
-                      class="inline-flex items-center rounded-xl border border-slate-200 bg-white/75 px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:shadow-md disabled:opacity-60"
+                      class="inline-flex items-center rounded-xl border border-slate-200 bg-white/75 px-4 py-2.5 text-sm font-medium text-slate-900 shadow-xs transition hover:shadow-md disabled:opacity-60"
                       disabled
                     >
                       Clear
@@ -307,7 +307,7 @@ function Page() {
                 />
 
                 <div class="mt-4 flex flex-wrap items-center gap-3">
-                  <div class="inline-flex items-center rounded-2xl border border-slate-200 bg-white/75 px-3 py-2 text-xs text-slate-700 shadow-sm">
+                  <div class="inline-flex items-center rounded-2xl border border-slate-200 bg-white/75 px-3 py-2 text-xs text-slate-700 shadow-xs">
                     <span class="mr-2 inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                     <span id="fileLabel">No files selected</span>
                   </div>
@@ -329,13 +329,13 @@ function Page() {
                 />
               </div>
 
-              <aside class="rounded-3xl border border-slate-200/70 bg-white/55 p-6 shadow-xl backdrop-blur sm:p-7">
+              <aside class="rounded-3xl border border-slate-200/70 bg-white/55 p-6 shadow-xl backdrop-blur-sm sm:p-7">
                 <h2 class="text-base font-semibold text-slate-900">
                   How it works
                 </h2>
                 <p class="mt-2 text-sm leading-relaxed text-slate-600">
                   dHash converts an image to grayscale, resizes it to{" "}
-                  <code class="rounded bg-slate-900/5 px-1 py-0.5 font-mono text-[0.85em] text-slate-900">
+                  <code class="rounded-sm bg-slate-900/5 px-1 py-0.5 font-mono text-[0.85em] text-slate-900">
                     9x8
                   </code>, then compares each pixel to its neighbor on the
                   right. The result is{" "}
@@ -371,7 +371,7 @@ function Page() {
                 </div>
                 <p class="mt-4 text-xs text-slate-600">
                   Computed server-side using{" "}
-                  <code class="rounded bg-slate-900/5 px-1 py-0.5 font-mono">
+                  <code class="rounded-sm bg-slate-900/5 px-1 py-0.5 font-mono">
                     @claudiu-ceia/dhash
                   </code>{" "}
                   on Deno Deploy.
@@ -381,7 +381,7 @@ function Page() {
                     <span class="font-medium text-slate-900">
                       Library version
                     </span>
-                    <code class="rounded bg-slate-900/5 px-1 py-0.5 font-mono">
+                    <code class="rounded-sm bg-slate-900/5 px-1 py-0.5 font-mono">
                       {LIB_VERSION ? `v${LIB_VERSION}` : "unknown"}
                     </code>
                   </div>
