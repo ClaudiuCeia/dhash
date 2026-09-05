@@ -58,7 +58,7 @@ jobs:
       - name: Deploy
         env:
           DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
-        run: deno deploy --config docs/deno.json --prod docs
+        run: deno run --no-lock -A jsr:@deno/deploy@0.0.9904 --config docs/deno.json --prod docs
 
       - name: Smoke test
         env:
