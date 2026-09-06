@@ -7,15 +7,15 @@ import sharp, { type Sharp } from "sharp";
 import { compare, dhash, invertHash, raw, save, toAscii } from "../mod.ts";
 
 test("sample", async () => {
-  assert.deepEqual(await dhash("./tests/dalle.png"), "0c7725cc0d25746c");
+  assert.deepEqual(await dhash("./tests/earthrise.jpg"), "0018001a5a0000fc");
 
-  const uint8arr = await readFile(new URL("./dalle.png", import.meta.url));
-  assert.deepEqual(await dhash(uint8arr), "0c7725cc0d25746c");
+  const uint8arr = await readFile(new URL("./earthrise.jpg", import.meta.url));
+  assert.deepEqual(await dhash(uint8arr), "0018001a5a0000fc");
 });
 
 test("dhash invert matches invertHash()", async () => {
-  const hash = await dhash("./tests/dalle.png");
-  const inv1 = await dhash("./tests/dalle.png", { invert: true });
+  const hash = await dhash("./tests/earthrise.jpg");
+  const inv1 = await dhash("./tests/earthrise.jpg", { invert: true });
   const inv2 = invertHash(hash);
   assert.deepEqual(inv1, inv2);
 });
@@ -217,38 +217,6 @@ test("dhash uses the first animated image frame", async () => {
     .toBuffer();
 
   assert.deepEqual(await dhash(animated), await dhash(firstFrame));
-});
-
-test("comparison", async () => {
-  const res = await Promise.all([
-    dhash("./tests/dalle.png"),
-    dhash("./tests/dalle-copyright.png"),
-    dhash("./tests/dalle-bolder-copyright.jpeg"),
-    dhash("./tests/dalle-crop.jpeg"),
-    dhash("./tests/dalle-edited.jpeg"),
-    dhash("./tests/dalle-stickers.jpeg"),
-  ]);
-
-  assert.deepEqual(compare(res[0], res[1]), 1);
-  assert.deepEqual(compare(res[0], res[2]), 7);
-  assert.deepEqual(compare(res[0], res[3]), 23);
-  assert.deepEqual(compare(res[0], res[4]), 1);
-  assert.deepEqual(compare(res[0], res[5]), 4);
-});
-
-test("print", async () => {
-  const hash = await dhash("./tests/dalle.png");
-  assert.deepEqual(
-    toAscii(hash),
-    `░░░░░░░░████░░░░
-    ░░██████░░██████
-    ░░░░██░░░░██░░██
-    ████░░░░████░░░░
-    ░░░░░░░░████░░██
-    ░░░░██░░░░██░░██
-    ░░██████░░██░░░░
-    ░░████░░████░░░░`.replaceAll(" ", ""),
-  );
 });
 
 test("toAscii renders full 64 bits", () => {

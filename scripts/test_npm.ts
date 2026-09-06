@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 
@@ -107,19 +108,19 @@ void ascii;
       `${directory}/node_modules/@claudiu-ceia/dhash/package.json`,
     ),
   );
-  if (
-    installedPackage.version !== expectedPackage.version ||
-    installedPackage.description !== expectedPackage.description ||
-    installedPackage.dependencies?.sharp !==
-      expectedPackage.dependencies.sharp ||
-    installedPackage.engines?.bun !== expectedPackage.engines.bun ||
-    installedPackage.engines?.node !== expectedPackage.engines.node ||
-    installedPackage.repository?.url !==
-      "git+https://github.com/ClaudiuCeia/dhash.git" ||
-    !installedPackage.keywords?.includes("perceptual-hash")
-  ) {
-    throw new Error("Packed npm metadata is incomplete.");
-  }
+  assert.equal(installedPackage.name, expectedPackage.name);
+  assert.equal(installedPackage.version, expectedPackage.version);
+  assert.equal(installedPackage.description, expectedPackage.description);
+  assert.equal(installedPackage.homepage, expectedPackage.homepage);
+  assert.deepEqual(installedPackage.repository, expectedPackage.repository);
+  assert.deepEqual(installedPackage.keywords, expectedPackage.keywords);
+  assert.equal(
+    installedPackage.dependencies?.sharp,
+    expectedPackage.dependencies.sharp,
+  );
+  assert.deepEqual(installedPackage.engines, expectedPackage.engines);
+  assert.equal(installedPackage.sideEffects, expectedPackage.sideEffects);
+  assert.notEqual(installedPackage.private, true);
   await run(npm, ["audit", "--omit=dev", "--audit-level=high"], directory);
   await run(
     npx,

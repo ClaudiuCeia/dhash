@@ -12,6 +12,7 @@ const statusEl = document.getElementById("status");
 const gridEl = document.getElementById("grid");
 const errorsEl = document.getElementById("errors");
 const fileLabelEl = document.getElementById("fileLabel");
+const thresholdEl = document.getElementById("threshold");
 
 /** @type {{file: File, url: string, name: string, size: number, type: string, hash?: string, distance?: number, err?: string, inFlight?: boolean}[]} */
 let items = [];
@@ -116,6 +117,8 @@ clearEl.addEventListener("click", () => {
   fileLabelEl.textContent = "No files selected";
 });
 
+thresholdEl.addEventListener("input", render);
+
 function popcountBigInt(x) {
   let n = x;
   let c = 0;
@@ -130,6 +133,17 @@ function hammingHex(a, b) {
   if (!a || !b) return NaN;
   const x = BigInt("0x" + a) ^ BigInt("0x" + b);
   return popcountBigInt(x);
+}
+
+export function parseThreshold(value) {
+  const threshold = Number(value);
+  return Number.isInteger(threshold) && threshold >= 0 && threshold <= 64
+    ? threshold
+    : null;
+}
+
+function selectedThreshold() {
+  return parseThreshold(thresholdEl.value);
 }
 
 function recomputeDistances() {
@@ -269,6 +283,7 @@ function drawHash(canvas, hash) {
 
 function render() {
   const sorted = sortByDistance();
+  const threshold = selectedThreshold();
   const focusedIndex = document.activeElement?.closest?.("[data-item-index]")
     ?.dataset.itemIndex;
   gridEl.innerHTML = "";
@@ -356,6 +371,16 @@ function render() {
       badge.className =
         "mt-3 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-800";
       badge.textContent = "reference";
+      meta.appendChild(badge);
+    } else if (
+      Number.isFinite(it.distance) &&
+      threshold !== null &&
+      it.distance <= threshold
+    ) {
+      const badge = document.createElement("div");
+      badge.className =
+        "mt-3 inline-flex items-center rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-medium text-cyan-800";
+      badge.textContent = "within your threshold";
       meta.appendChild(badge);
     }
 

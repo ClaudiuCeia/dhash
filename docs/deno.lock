@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@claudiu-ceia/dhash@~0.7.1": "0.7.1",
+    "jsr:@claudiu-ceia/dhash@~0.7.2": "0.7.2",
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:@tailwindcss/cli@4.3.3": "4.3.3",
@@ -12,8 +12,8 @@
     "npm:tailwindcss@4.3.3": "4.3.3"
   },
   "jsr": {
-    "@claudiu-ceia/dhash@0.7.1": {
-      "integrity": "a74000f70b1c7d4dde797ff2e93e99101c902a812d32aa69ce8c27ce3e39a731",
+    "@claudiu-ceia/dhash@0.7.2": {
+      "integrity": "42fc60b7d44c9ce2a29aad43b89fc87fa4d7c0902a19f5772b0ae02e69879d18",
       "dependencies": [
         "npm:sharp"
       ]
@@ -685,7 +685,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@claudiu-ceia/dhash@~0.7.1",
+      "jsr:@claudiu-ceia/dhash@~0.7.2",
       "jsr:@std/assert@^1.0.19",
       "npm:@tailwindcss/cli@4.3.3",
       "npm:happy-dom@20.14.0",

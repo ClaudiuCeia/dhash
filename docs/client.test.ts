@@ -19,6 +19,7 @@ Deno.test("client preserves card focus and ignores cancelled runs", async () => 
     <div id="grid"></div>
     <div id="errors"></div>
     <span id="fileLabel"></span>
+    <input id="threshold" value="8">
   `;
 
   const originalDocument = globalThis.document;
@@ -60,7 +61,11 @@ Deno.test("client preserves card focus and ignores cancelled runs", async () => 
           pending.push({ resolve });
         }),
     });
-    await import(`./client.js?test=${crypto.randomUUID()}`);
+    const client = await import(`./client.js?test=${crypto.randomUUID()}`);
+    assertEquals(client.parseThreshold("8"), 8);
+    assertEquals(client.parseThreshold("-1"), null);
+    assertEquals(client.parseThreshold("65"), null);
+    assertEquals(client.parseThreshold("8.5"), null);
 
     const files = window.document.getElementById("files");
     if (!(files instanceof window.HTMLInputElement)) {

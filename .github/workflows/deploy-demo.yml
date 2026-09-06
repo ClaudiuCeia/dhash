@@ -69,5 +69,5 @@ jobs:
           deno run
           --allow-env=DEMO_URL,EXPECTED_DEPLOY_SHA,EXPECTED_VERSION
           --allow-net=dhash.claudiuceia.deno.net
-          --allow-read=tests/dalle.png
+          --allow-read=tests/earthrise.jpg
           scripts/smoke_demo.ts

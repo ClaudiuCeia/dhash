@@ -1,5 +1,6 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { publicPackageMetadata } from "./package_metadata.ts";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const developmentPackageJson = JSON.parse(
@@ -47,28 +48,11 @@ try {
   const packageDirectory = join(unpacked, "package");
   const packageJsonPath = join(packageDirectory, "package.json");
   const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
-  Object.assign(packageJson, {
-    description: developmentPackageJson.description,
-    repository: {
-      type: "git",
-      url: "git+https://github.com/ClaudiuCeia/dhash.git",
-    },
-    homepage: "https://github.com/ClaudiuCeia/dhash#readme",
-    bugs: { url: "https://github.com/ClaudiuCeia/dhash/issues" },
-    keywords: [
-      "dhash",
-      "difference-hash",
-      "perceptual-hash",
-      "image",
-      "similarity",
-    ],
-    dependencies: {
-      ...packageJson.dependencies,
-      sharp: developmentPackageJson.dependencies.sharp,
-    },
-    engines: developmentPackageJson.engines,
-    publishConfig: { access: "public" },
-  });
+  Object.assign(
+    packageJson,
+    publicPackageMetadata(developmentPackageJson, packageJson),
+  );
+  delete packageJson.private;
   await Deno.writeTextFile(
     packageJsonPath,
     JSON.stringify(packageJson, null, 2) + "\n",

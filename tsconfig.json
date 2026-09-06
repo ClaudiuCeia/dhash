@@ -11,7 +11,10 @@
   },
   "include": [
     "mod.ts",
+    "examples/**/*.ts",
     "scripts/check_manifests.ts",
+    "scripts/generate_fixtures.ts",
+    "scripts/package_metadata.ts",
     "src/**/*.ts",
     "tests/**/*.ts"
   ],

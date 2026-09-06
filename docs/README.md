@@ -1,25 +1,25 @@
-# dHash Demo (Deno Deploy)
+# Near-duplicate image comparison demo
 
-This folder contains a small, deployable demo app for the `@claudiu-ceia/dhash`
-library.
+This folder contains the Deno Deploy demo for `@claudiu-ceia/dhash`.
 
 - Production demo: `https://dhash.claudiuceia.deno.net/`
 - Deno Deploy config: `docs/deno.json`
-- Server: `docs/main.tsx` (SSR HTML + `/hash` API)
-- Client: `docs/client.js` (upload UI, hashing, sorting)
+- Server: `docs/main.tsx` with SSR HTML and the `/hash` API
+- Client: `docs/client.js` with the upload, threshold, and ranking UI
 
-## What It Does
+## What it does
 
-1. Upload up to 20 images (max 10 MiB each).
-2. Computes a 64-bit dHash for each image by calling `POST /hash`.
-3. Sorts images by similarity (Hamming distance) to a reference image you set
-   with a mouse or keyboard.
+1. Accepts up to 20 images with a 10 MiB limit for each image.
+2. Computes a 64-bit dHash for each image on the server.
+3. Ranks images by Hamming distance from a selected reference.
+4. Marks distances within a threshold selected by the user.
 
-Everything is in-memory; no persistence.
+The threshold is an application-defined example. The demo explains that dHash is
+not crop invariant and that an equal fingerprint does not prove equal files.
 
-## Run Locally
+## Run locally
 
-From the repo root:
+From the repository root:
 
 ```bash
 deno run --config docs/deno.json \
@@ -34,5 +34,5 @@ Then open `http://localhost:8000/`.
 
 ## Deploy
 
-This app is intended to be deployed from CI using `deno deploy` and the
-`DENO_DEPLOY_TOKEN` secret. See `.github/workflows/deploy-demo.yml`.
+CI deploys the app with `deno deploy` and the `DENO_DEPLOY_TOKEN` secret. See
+`.github/workflows/deploy-demo.yml`.

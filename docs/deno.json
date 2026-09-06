@@ -6,7 +6,7 @@
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19",
-    "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.7.1",
+    "dhash_jsr": "jsr:@claudiu-ceia/dhash@^0.7.2",
     "happy-dom": "npm:happy-dom@20.14.0",
     "preact": "npm:preact@10.29.8",
     "preact-render-to-string": "npm:preact-render-to-string@6.7.0",
