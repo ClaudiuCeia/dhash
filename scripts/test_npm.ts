@@ -5,9 +5,9 @@ const packageName = "@claudiu-ceia/dhash";
 const npm = Deno.build.os === "windows" ? "npm.cmd" : "npm";
 const npx = Deno.build.os === "windows" ? "npx.cmd" : "npx";
 const fixtureDirectory = fileURLToPath(new URL("../tests", import.meta.url));
-const expectedVersion = JSON.parse(
-  await Deno.readTextFile(new URL("../deno.json", import.meta.url)),
-).version;
+const expectedPackage = JSON.parse(
+  await Deno.readTextFile(new URL("../package.json", import.meta.url)),
+);
 const args = [...Deno.args];
 const archiveArgument = args.indexOf("--archive");
 let suppliedArchive: string | undefined;
@@ -95,6 +95,12 @@ void ascii;
     }),
   );
 
+  await run("bun", ["add", archive], directory);
+  const runtimeEnvironment = { DHASH_FIXTURES: fixtureDirectory };
+  await run("bun", ["integration.mjs"], directory, runtimeEnvironment);
+  await Deno.remove(`${directory}/node_modules`, { recursive: true });
+  await Deno.remove(`${directory}/bun.lock`);
+
   await run(npm, ["install", "--no-audit", "--no-fund", archive], directory);
   const installedPackage = JSON.parse(
     await Deno.readTextFile(
@@ -102,8 +108,12 @@ void ascii;
     ),
   );
   if (
-    installedPackage.version !== expectedVersion ||
-    installedPackage.engines?.node !== ">=22" ||
+    installedPackage.version !== expectedPackage.version ||
+    installedPackage.description !== expectedPackage.description ||
+    installedPackage.dependencies?.sharp !==
+      expectedPackage.dependencies.sharp ||
+    installedPackage.engines?.bun !== expectedPackage.engines.bun ||
+    installedPackage.engines?.node !== expectedPackage.engines.node ||
     installedPackage.repository?.url !==
       "git+https://github.com/ClaudiuCeia/dhash.git" ||
     !installedPackage.keywords?.includes("perceptual-hash")
@@ -123,9 +133,7 @@ void ascii;
     const args = version === null
       ? ["integration.mjs"]
       : ["--yes", `--package=node@${version}`, "node", "integration.mjs"];
-    await run(command, args, directory, {
-      DHASH_FIXTURES: fixtureDirectory,
-    });
+    await run(command, args, directory, runtimeEnvironment);
   }
 
   console.log(`Verified ${packageName} from a packed npm tarball.`);

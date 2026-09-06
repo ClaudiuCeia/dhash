@@ -46,9 +46,10 @@ const readFileBounded = async (
 
   try {
     while (true) {
-      const available = maximum === false
-        ? READ_CHUNK_BYTES
-        : Math.min(READ_CHUNK_BYTES, maximum - total + 1);
+      const available =
+        maximum === false
+          ? READ_CHUNK_BYTES
+          : Math.min(READ_CHUNK_BYTES, maximum - total + 1);
       const chunk = new Uint8Array(available);
       const { bytesRead } = await file.read(chunk, 0, chunk.byteLength, null);
       if (bytesRead === 0) break;
@@ -88,7 +89,7 @@ const parseHash = (hash: string): bigint => {
  */
 export const invertHash = (hash: string): string => {
   const v = parseHash(hash);
-  return ((~v) & MASK_64).toString(16).padStart(16, "0");
+  return (~v & MASK_64).toString(16).padStart(16, "0");
 };
 
 /**
@@ -133,9 +134,7 @@ export const dhash = async (
       if (cause instanceof RangeError) throw cause;
       throw new Error(`Failed to open "${resolvedPath}"`, { cause });
     }
-  } else if (
-    maxInputBytes !== false && pathOrSrc.byteLength > maxInputBytes
-  ) {
+  } else if (maxInputBytes !== false && pathOrSrc.byteLength > maxInputBytes) {
     throw new RangeError(
       `Image exceeds the ${maxInputBytes}-byte input limit.`,
     );
@@ -166,8 +165,12 @@ export const dhash = async (
       image.rotate(270);
       break;
   }
-  const resized = await image.flatten({ background: "white" }).grayscale()
-    .resize(9, 8, { fit: "fill" }).raw().toBuffer();
+  const resized = await image
+    .flatten({ background: "white" })
+    .grayscale()
+    .resize(9, 8, { fit: "fill" })
+    .raw()
+    .toBuffer();
 
   const out = [];
   for (let row = 0; row < 8; row++) {

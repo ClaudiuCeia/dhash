@@ -29,6 +29,11 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.0
+
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -63,6 +68,12 @@ jobs:
             exit 1
           fi
 
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check with Bun
+        run: bun run check
+
       - name: Check source and JSR package
         run: |
           deno task check
@@ -72,7 +83,7 @@ jobs:
         run: deno task pack:npm
 
       - name: Check npm package
-        run: deno task check:npm --archive "${GITHUB_WORKSPACE}/dhash.tgz" 22 24
+        run: deno task check:npm --archive "${GITHUB_WORKSPACE}/dhash.tgz" 22 24 26
 
       - name: Upload npm package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
