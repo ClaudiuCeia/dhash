@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": ["bun"]
+  },
+  "include": [
+    "mod.ts",
+    "scripts/check_manifests.ts",
+    "src/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": ["tests/deno_test_compat.ts"]
+}

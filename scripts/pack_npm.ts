@@ -2,6 +2,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
+const developmentPackageJson = JSON.parse(
+  await Deno.readTextFile(new URL("../package.json", import.meta.url)),
+);
 const npm = Deno.build.os === "windows" ? "npm.cmd" : "npm";
 const output = resolve(Deno.args[0] ?? "dhash.tgz");
 const directory = await Deno.makeTempDir({ prefix: "dhash-pack-" });
@@ -45,7 +48,7 @@ try {
   const packageJsonPath = join(packageDirectory, "package.json");
   const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
   Object.assign(packageJson, {
-    description: "A difference hash implementation for Deno and Node.js.",
+    description: developmentPackageJson.description,
     repository: {
       type: "git",
       url: "git+https://github.com/ClaudiuCeia/dhash.git",
@@ -59,7 +62,11 @@ try {
       "image",
       "similarity",
     ],
-    engines: { node: ">=22" },
+    dependencies: {
+      ...packageJson.dependencies,
+      sharp: developmentPackageJson.dependencies.sharp,
+    },
+    engines: developmentPackageJson.engines,
     publishConfig: { access: "public" },
   });
   await Deno.writeTextFile(

@@ -4,38 +4,38 @@
 
 - `mod.ts`: public entrypoint; re-exports the library API.
 - `src/`: implementation (currently `src/dhash.ts`).
-- `tests/`: Deno tests (`*.test.ts`) and image fixtures used by the tests.
-- `deno.json`: package metadata, import map, and tasks.
+- `tests/`: shared Bun/Deno tests (`*.test.ts`) and image fixtures.
+- `package.json`: Bun-first development dependencies and scripts.
+- `deno.json`: JSR package metadata and Deno compatibility tasks.
 
 Keep public exports flowing through `mod.ts`. If you add a new public
 function/type, export it from `mod.ts` and add/adjust tests under `tests/`.
 
 ## Build, Test, and Development Commands
 
-- `deno task test`: runs the full test suite with the required permissions
-  (`--allow-read --allow-ffi --allow-env`).
-- `deno test`: useful for quick runs; mirror the permissions from
-  `deno task test` if tests fail due to denied access.
-- `deno fmt`: format the repo (preferred before committing).
-- `deno lint`: run Deno’s linter on TypeScript sources.
-- `deno check mod.ts`: type-check the public surface area.
+- `bun run check`: runs formatting, linting, TypeScript, CSS, and library tests.
+- `bun test`: runs the shared library suite with Bun.
+- `bun run check:deno`: validates the library and demo with Deno.
+- `bun run check:npm`: builds and tests the generated npm package with Bun and
+  Node.js.
+- `bun run pack:npm`: builds `dhash.tgz` for npm.
 
 ## Coding Style & Naming Conventions
 
-- TypeScript for Deno; follow `deno fmt` output (2-space indent, trailing commas
-  where applicable).
-- Prefer `@std/*` imports via `deno.json` import mappings (avoid ad-hoc path
-  utilities).
+- TypeScript; follow `oxfmt` output for shared library code and tests. Deno-only
+  scripts and demo code remain formatted by `deno fmt`.
+- Prefer runtime-neutral Node APIs in shared library code and tests. Use
+  `@std/*` imports via import mappings only in Deno-specific scripts or demo
+  code.
 - Naming:
   - exported functions: `camelCase` (e.g. `toAscii`, `compare`).
   - test files: `*.test.ts`.
 
 ## Testing Guidelines
 
-- Use `Deno.test(...)` with `@std/assert`-style assertions (follow existing
-  patterns in `tests/dhash.test.ts`).
-- Optional coverage: `deno test --coverage=coverage` then
-  `deno coverage coverage` (output is ignored via `.gitignore`).
+- Use `test` from `bun:test` and runtime-neutral Node APIs in shared library
+  tests. `deno.test.json` remaps `bun:test` for Deno compatibility.
+- Optional coverage: `bun run coverage`.
 - If you change hashing behavior, update expected hashes and/or fixtures in
   `tests/` intentionally (include rationale in the PR).
 
@@ -47,16 +47,17 @@ function/type, export it from `mod.ts` and add/adjust tests under `tests/`.
   - what changed and why (short, concrete),
   - how to verify (e.g. `deno task test`),
   - notes on permission changes or dependency changes (especially
-    `npm:sharp@...`) and any `deno.lock` updates.
+    `npm:sharp@...`) and any lockfile updates.
 
 ## Publishing
 
-- Bump `version` in `deno.json`.
-- Validate locally: `deno fmt`, `deno lint`, `deno task test`.
+- Bump `version` in both `package.json` and `deno.json`.
+- Validate locally: `bun run check`, `bun run check:deno`, and
+  `bun run check:npm`.
 - Preview package contents: `deno publish --dry-run`.
-- Build the npm package: `deno task pack:npm`.
+- Build the npm package: `bun run pack:npm`.
 - Publish to JSR: `deno publish` (auth via token/login).
-- Publish to npm: `deno task pack:npm` then `npm publish dhash.tgz`.
+- Publish to npm: `bun run pack:npm` then `npm publish dhash.tgz`.
 - CI publish: push a stable semver tag matching `deno.json`’s version (e.g.
   `v0.2.0`). The `publish-npm.yml` workflow validates once, publishes the tested
   npm artifact through trusted publishing (OIDC), publishes to JSR through its

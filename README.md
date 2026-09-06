@@ -1,6 +1,6 @@
 # dhash
 
-_A `dhash` implementation for Deno and Node.js._
+_A `dhash` implementation for Bun, Deno, and Node.js._
 
 A fast algorithm that allows checking if two images are "kind of" the same (the
 same source image, slightly modified). Examples:
@@ -30,17 +30,18 @@ deployed separately from the JSR package.
 
 ## Usage
 
-Install from JSR with Deno, or directly from npm with Node.js:
+Install from npm with Bun or Node.js, or from JSR with Deno:
 
 ```sh
-deno add jsr:@claudiu-ceia/dhash
+bun add @claudiu-ceia/dhash
 npm install @claudiu-ceia/dhash
+deno add jsr:@claudiu-ceia/dhash
 ```
 
-The JSR package supports Deno 2.6 or newer. The npm package is ESM-only and
-supports Node.js 22 or newer. Images are auto-oriented from metadata, converted
-to grayscale, composited on white when transparent, and resized in full to 9x8
-without cropping. Multi-frame images use their first frame.
+The npm package supports Bun 1.4 or newer and Node.js 22 or newer. The JSR
+package supports Deno 2.6 or newer. Images are auto-oriented from metadata,
+converted to grayscale, composited on white when transparent, and resized in
+full to 9x8 without cropping. Multi-frame images use their first frame.
 
 You can compare dhash values by simply computing the Hamming distance between
 them:
@@ -100,16 +101,21 @@ preserved.
 
 ## Development
 
-- Run all checks: `deno task check`.
-- Build, install, and test the npm package with Node.js: `deno task check:npm`.
+- Install dependencies: `bun install`.
+- Run the primary development checks: `bun run check`.
+- Run only the library tests: `bun test`.
+- Validate the same library behavior plus the Deno Deploy demo with Deno:
+  `bun run check:deno`.
+- Build, install, and test the npm package with Bun and Node.js:
+  `bun run check:npm`.
 - Try the experimental TypeScript 7 native checker: `deno task check:ts7`.
   Release CI continues to use Deno's stable default checker.
-- Run only tests: `deno task test` (requires
+- Run only Deno tests: `deno task test` (requires
   `--allow-read --allow-write --allow-ffi --allow-env` because `sharp` uses
   native bindings, reads fixtures, and the `save()` test writes to a temporary
   directory).
 - Preview the JSR package: `deno publish --dry-run`.
-- Build the npm package: `deno task pack:npm`.
+- Build the npm package: `bun run pack:npm`.
 
 ## License
 

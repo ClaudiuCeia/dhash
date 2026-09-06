@@ -1,0 +1,14 @@
+{
+  "nodeModulesDir": "auto",
+  "imports": {
+    "bun:test": "./tests/deno_test_compat.ts",
+    "sharp": "npm:sharp@0.35.4"
+  },
+  "lock": {
+    "path": "./deno.test.lock",
+    "frozen": true
+  },
+  "test": {
+    "include": ["tests/**/*.test.ts"]
+  }
+}

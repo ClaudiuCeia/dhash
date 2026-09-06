@@ -3,36 +3,46 @@
   "version": "0.7.2",
   "license": "MIT",
   "exports": "./mod.ts",
+  "lock": {
+    "path": "./deno.lock",
+    "frozen": true
+  },
   "nodeModulesDir": "auto",
   "publish": {
     "exclude": [
       ".vscode",
       ".github",
+      ".oxfmtrc.json",
       "tests",
       "docs",
       "coverage",
       "node_modules",
       "scripts",
-      "AGENTS.md"
+      "AGENTS.md",
+      "bun.lock",
+      "deno.lock",
+      "deno.test.lock",
+      "deno.test.json",
+      "package.json",
+      "tsconfig.json"
     ]
   },
   "tasks": {
     "build:css": "deno run --config docs/deno.json --frozen -A npm:@tailwindcss/cli@4.3.3 -i docs/tailwind.css -o docs/styles.css --minify",
-    "check": "deno task check:css && deno fmt --check && deno lint && deno check mod.ts scripts/pack_npm.ts scripts/test_npm.ts scripts/verify_jsr.ts scripts/smoke_demo.ts && deno check --config docs/deno.json docs/main.ts && deno task test",
+    "check": "deno task check:css && deno fmt --check scripts docs && deno lint && deno check mod.ts scripts/check_manifests.ts scripts/pack_npm.ts scripts/test_npm.ts scripts/verify_jsr.ts scripts/smoke_demo.ts && deno check --frozen --config docs/deno.json docs/main.ts && deno task test",
     "check:css": "deno task build:css && git diff --exit-code -- docs/styles.css",
     "check:npm": "deno run -A scripts/test_npm.ts",
-    "check:ts7": "deno check --unstable-tsgo mod.ts scripts/pack_npm.ts scripts/test_npm.ts scripts/verify_jsr.ts scripts/smoke_demo.ts && deno check --unstable-tsgo --config docs/deno.json docs/main.ts && deno task test:ts7",
+    "check:ts7": "deno check --unstable-tsgo mod.ts scripts/check_manifests.ts scripts/pack_npm.ts scripts/test_npm.ts scripts/verify_jsr.ts scripts/smoke_demo.ts && deno check --frozen --unstable-tsgo --config docs/deno.json docs/main.ts && deno task test:ts7",
     "pack:npm": "deno run -A scripts/pack_npm.ts",
     "test": "deno task test:lib && deno task test:demo",
-    "test:demo": "deno test --config docs/deno.json --allow-read --allow-ffi --allow-env docs",
-    "test:lib": "deno test --allow-read --allow-write --allow-ffi --allow-env tests",
-    "test:ts7": "deno test --unstable-tsgo --allow-read --allow-write --allow-ffi --allow-env tests && deno test --unstable-tsgo --config docs/deno.json --allow-read --allow-ffi --allow-env docs"
+    "test:demo": "deno test --frozen --config docs/deno.json --allow-read --allow-ffi --allow-env docs",
+    "test:lib": "deno test --config deno.test.json --allow-read --allow-write --allow-ffi --allow-env",
+    "test:ts7": "deno test --unstable-tsgo --config deno.test.json --allow-read --allow-write --allow-ffi --allow-env && deno test --frozen --unstable-tsgo --config docs/deno.json --allow-read --allow-ffi --allow-env docs"
   },
   "fmt": {
     "exclude": ["docs/styles.css"]
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.19",
     "sharp": "npm:sharp@0.35.4"
   }
 }

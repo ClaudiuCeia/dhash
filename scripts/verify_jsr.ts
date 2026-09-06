@@ -35,7 +35,6 @@ const expectedFiles = [
   "/LICENSE",
   "/README.md",
   "/deno.json",
-  "/deno.lock",
   "/mod.ts",
   "/src/dhash.ts",
 ];

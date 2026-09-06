@@ -1,34 +1,33 @@
-import {
-  assertEquals,
-  assertNotEquals,
-  assertRejects,
-  assertThrows,
-} from "@std/assert";
-import { resolve } from "node:path";
+import { test } from "bun:test";
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import sharp, { type Sharp } from "sharp";
 import { compare, dhash, invertHash, raw, save, toAscii } from "../mod.ts";
 
-Deno.test("sample", async () => {
-  assertEquals(await dhash("./tests/dalle.png"), "0c7725cc0d25746c");
+test("sample", async () => {
+  assert.deepEqual(await dhash("./tests/dalle.png"), "0c7725cc0d25746c");
 
-  const uint8arr = await Deno.readFile(new URL("./dalle.png", import.meta.url));
-  assertEquals(await dhash(uint8arr), "0c7725cc0d25746c");
+  const uint8arr = await readFile(new URL("./dalle.png", import.meta.url));
+  assert.deepEqual(await dhash(uint8arr), "0c7725cc0d25746c");
 });
 
-Deno.test("dhash invert matches invertHash()", async () => {
+test("dhash invert matches invertHash()", async () => {
   const hash = await dhash("./tests/dalle.png");
   const inv1 = await dhash("./tests/dalle.png", { invert: true });
   const inv2 = invertHash(hash);
-  assertEquals(inv1, inv2);
+  assert.deepEqual(inv1, inv2);
 });
 
-Deno.test("dhash throws for missing files", async () => {
+test("dhash throws for missing files", async () => {
   const path = resolve("./tests/__does_not_exist__.png");
-  const error = await assertRejects(() => dhash(path), Error);
-  assertEquals(error.message, `Failed to open "${path}"`);
+  await assert.rejects(() => dhash(path), {
+    message: `Failed to open "${path}"`,
+  });
 });
 
-Deno.test("dhash bounds encoded and decoded image sizes", async () => {
+test("dhash bounds encoded and decoded image sizes", async () => {
   const image = await sharp({
     create: {
       width: 10,
@@ -36,52 +35,57 @@ Deno.test("dhash bounds encoded and decoded image sizes", async () => {
       channels: 3,
       background: "white",
     },
-  }).png().toBuffer();
-  const directory = await Deno.makeTempDir();
+  })
+    .png()
+    .toBuffer();
+  const directory = await mkdtemp(join(tmpdir(), "dhash-"));
   const path = `${directory}/image.png`;
 
   try {
-    await Deno.writeFile(path, image);
-    await assertRejects(
+    await writeFile(path, image);
+    await assert.rejects(
       () => dhash(image, { maxInputBytes: image.byteLength - 1 }),
-      RangeError,
-      `Image exceeds the ${image.byteLength - 1}-byte input limit.`,
+      {
+        name: "RangeError",
+        message: `Image exceeds the ${image.byteLength - 1}-byte input limit.`,
+      },
     );
-    await assertRejects(
+    await assert.rejects(
       () => dhash(path, { maxInputBytes: image.byteLength - 1 }),
-      RangeError,
-      `Image exceeds the ${image.byteLength - 1}-byte input limit.`,
+      {
+        name: "RangeError",
+        message: `Image exceeds the ${image.byteLength - 1}-byte input limit.`,
+      },
     );
-    await assertRejects(
-      () => dhash(image, { limitInputPixels: 99 }),
-      Error,
-      "Input image exceeds pixel limit",
-    );
-    assertEquals(
+    await assert.rejects(() => dhash(image, { limitInputPixels: 99 }), {
+      message: /Input image exceeds pixel limit/,
+    });
+    assert.deepEqual(
       await dhash(image, { maxInputBytes: false, limitInputPixels: false }),
       "0000000000000000",
     );
   } finally {
-    await Deno.remove(directory, { recursive: true });
+    await rm(directory, { recursive: true });
   }
 });
 
-Deno.test("dhash validates image limits", async () => {
+test("dhash validates image limits", async () => {
   const image = new Uint8Array();
 
-  await assertRejects(
-    () => dhash(image, { maxInputBytes: 0 }),
-    RangeError,
-    "maxInputBytes must be a positive safe integer.",
-  );
-  await assertRejects(
+  await assert.rejects(() => dhash(image, { maxInputBytes: 0 }), {
+    name: "RangeError",
+    message: "maxInputBytes must be a positive safe integer.",
+  });
+  await assert.rejects(
     () => dhash(image, { limitInputPixels: Number.MAX_SAFE_INTEGER + 1 }),
-    RangeError,
-    "limitInputPixels must be a positive safe integer.",
+    {
+      name: "RangeError",
+      message: "limitInputPixels must be a positive safe integer.",
+    },
   );
 });
 
-Deno.test("dhash includes non-square image edges", async () => {
+test("dhash includes non-square image edges", async () => {
   const makeImage = async (edge: number) => {
     const pixels = new Uint8Array(18 * 8);
     for (let row = 0; row < 8; row++) {
@@ -91,16 +95,18 @@ Deno.test("dhash includes non-square image edges", async () => {
     }
     return await sharp(pixels, {
       raw: { width: 18, height: 8, channels: 1 },
-    }).png().toBuffer();
+    })
+      .png()
+      .toBuffer();
   };
 
-  assertNotEquals(
+  assert.notDeepEqual(
     await dhash(await makeImage(0)),
     await dhash(await makeImage(255)),
   );
 });
 
-Deno.test("dhash respects every EXIF orientation", async () => {
+test("dhash respects every EXIF orientation", async () => {
   const width = 12;
   const height = 8;
   const pixels = new Uint8Array(width * height);
@@ -125,17 +131,23 @@ Deno.test("dhash respects every EXIF orientation", async () => {
   ];
 
   for (let orientation = 1; orientation <= 8; orientation++) {
-    const exifOriented = await image.clone().png().withMetadata({ orientation })
+    const exifOriented = await image
+      .clone()
+      .png()
+      .withMetadata({ orientation })
       .toBuffer();
-    const physicallyOriented = await transforms[orientation - 1](
-      image.clone(),
-    ).png().toBuffer();
+    const physicallyOriented = await transforms[orientation - 1](image.clone())
+      .png()
+      .toBuffer();
 
-    assertEquals(await dhash(exifOriented), await dhash(physicallyOriented));
+    assert.deepEqual(
+      await dhash(exifOriented),
+      await dhash(physicallyOriented),
+    );
   }
 });
 
-Deno.test("dhash composites transparent pixels on white", async () => {
+test("dhash composites transparent pixels on white", async () => {
   const makeImage = async (hiddenValue: (index: number) => number) => {
     const pixels = new Uint8Array(9 * 8 * 4);
     for (let i = 0; i < 9 * 8; i++) {
@@ -146,7 +158,9 @@ Deno.test("dhash composites transparent pixels on white", async () => {
     }
     return await sharp(pixels, {
       raw: { width: 9, height: 8, channels: 4 },
-    }).png().toBuffer();
+    })
+      .png()
+      .toBuffer();
   };
   const white = await sharp({
     create: {
@@ -155,19 +169,21 @@ Deno.test("dhash composites transparent pixels on white", async () => {
       channels: 3,
       background: "white",
     },
-  }).png().toBuffer();
+  })
+    .png()
+    .toBuffer();
 
-  assertEquals(
+  assert.deepEqual(
     await dhash(await makeImage((i) => i % 256)),
     await dhash(white),
   );
-  assertEquals(
+  assert.deepEqual(
     await dhash(await makeImage((i) => 255 - (i % 256))),
     await dhash(white),
   );
 });
 
-Deno.test("dhash uses the first animated image frame", async () => {
+test("dhash uses the first animated image frame", async () => {
   const width = 9;
   const height = 8;
   const channels = 3;
@@ -191,15 +207,19 @@ Deno.test("dhash uses the first animated image frame", async () => {
       channels,
       pageHeight: height,
     },
-  }).gif({ loop: 0, delay: [100, 100] }).toBuffer();
+  })
+    .gif({ loop: 0, delay: [100, 100] })
+    .toBuffer();
   const firstFrame = await sharp(first, {
     raw: { width, height, channels },
-  }).png().toBuffer();
+  })
+    .png()
+    .toBuffer();
 
-  assertEquals(await dhash(animated), await dhash(firstFrame));
+  assert.deepEqual(await dhash(animated), await dhash(firstFrame));
 });
 
-Deno.test("comparison", async () => {
+test("comparison", async () => {
   const res = await Promise.all([
     dhash("./tests/dalle.png"),
     dhash("./tests/dalle-copyright.png"),
@@ -209,16 +229,16 @@ Deno.test("comparison", async () => {
     dhash("./tests/dalle-stickers.jpeg"),
   ]);
 
-  assertEquals(compare(res[0], res[1]), 1);
-  assertEquals(compare(res[0], res[2]), 7);
-  assertEquals(compare(res[0], res[3]), 23);
-  assertEquals(compare(res[0], res[4]), 1);
-  assertEquals(compare(res[0], res[5]), 4);
+  assert.deepEqual(compare(res[0], res[1]), 1);
+  assert.deepEqual(compare(res[0], res[2]), 7);
+  assert.deepEqual(compare(res[0], res[3]), 23);
+  assert.deepEqual(compare(res[0], res[4]), 1);
+  assert.deepEqual(compare(res[0], res[5]), 4);
 });
 
-Deno.test("print", async () => {
+test("print", async () => {
   const hash = await dhash("./tests/dalle.png");
-  assertEquals(
+  assert.deepEqual(
     toAscii(hash),
     `░░░░░░░░████░░░░
     ░░██████░░██████
@@ -231,8 +251,8 @@ Deno.test("print", async () => {
   );
 });
 
-Deno.test("toAscii renders full 64 bits", () => {
-  assertEquals(
+test("toAscii renders full 64 bits", () => {
+  assert.deepEqual(
     toAscii("0000000000000000"),
     `░░░░░░░░░░░░░░░░
     ░░░░░░░░░░░░░░░░
@@ -244,7 +264,7 @@ Deno.test("toAscii renders full 64 bits", () => {
     ░░░░░░░░░░░░░░░░`.replaceAll(" ", ""),
   );
 
-  assertEquals(
+  assert.deepEqual(
     toAscii("ffffffffffffffff"),
     `████████████████
     ████████████████
@@ -257,88 +277,77 @@ Deno.test("toAscii renders full 64 bits", () => {
   );
 });
 
-Deno.test("toAscii supports custom characters", () => {
-  assertEquals(toAscii("0", [".", "#"]).split("\n").length, 8);
+test("toAscii supports custom characters", () => {
+  assert.deepEqual(toAscii("0", [".", "#"]).split("\n").length, 8);
 });
 
-Deno.test("compare throws on different length hashes", () => {
-  const error = assertThrows(() => compare("00", "0000"), Error);
-  assertEquals(
-    error.message,
-    'Hashes must have the same length. Got "00" (2) and "0000" (4).',
-  );
+test("compare throws on different length hashes", () => {
+  assert.throws(() => compare("00", "0000"), {
+    message: 'Hashes must have the same length. Got "00" (2) and "0000" (4).',
+  });
 });
 
-Deno.test("hash APIs reject invalid 64-bit hex values", async () => {
+test("hash APIs reject invalid 64-bit hex values", async () => {
   const invalidHashes = ["", "not-hex", "10000000000000000"];
   const message = "Hash must contain 1 to 16 hexadecimal characters.";
 
   for (const hash of invalidHashes) {
-    assertEquals(
-      assertThrows(() => invertHash(hash), TypeError).message,
+    assert.throws(() => invertHash(hash), { name: "TypeError", message });
+    assert.throws(() => compare(hash, hash), { name: "TypeError", message });
+    assert.throws(() => toAscii(hash), { name: "TypeError", message });
+    await assert.rejects(() => raw(hash), { name: "TypeError", message });
+    await assert.rejects(() => save(hash, "unused"), {
+      name: "TypeError",
       message,
-    );
-    assertEquals(
-      assertThrows(() => compare(hash, hash), TypeError).message,
-      message,
-    );
-    assertEquals(assertThrows(() => toAscii(hash), TypeError).message, message);
-    assertEquals(
-      (await assertRejects(() => raw(hash), TypeError)).message,
-      message,
-    );
-    assertEquals(
-      (await assertRejects(() => save(hash, "unused"), TypeError)).message,
-      message,
-    );
+    });
   }
 });
 
-Deno.test("hash APIs accept short uppercase values", async () => {
-  assertEquals(invertHash("A"), "fffffffffffffff5");
-  assertEquals(compare("A", "a"), 0);
-  assertEquals(toAscii("A"), toAscii("a"));
-  assertEquals(await raw("A"), await raw("a"));
+test("hash APIs accept short uppercase values", async () => {
+  assert.deepEqual(invertHash("A"), "fffffffffffffff5");
+  assert.deepEqual(compare("A", "a"), 0);
+  assert.deepEqual(toAscii("A"), toAscii("a"));
+  assert.deepEqual(await raw("A"), await raw("a"));
 
-  const directory = await Deno.makeTempDir();
+  const directory = await mkdtemp(join(tmpdir(), "dhash-"));
   try {
     await save("A", `${directory}/uppercase`);
-    assertEquals(
-      Array.from(await Deno.readFile(`${directory}/uppercase.png`)),
+    assert.deepEqual(
+      Array.from(await readFile(`${directory}/uppercase.png`)),
       Array.from(await raw("a")),
     );
   } finally {
-    await Deno.remove(directory, { recursive: true });
+    await rm(directory, { recursive: true });
   }
 });
 
-Deno.test("raw renders hash bits to a PNG buffer", async () => {
+test("raw renders hash bits to a PNG buffer", async () => {
   const whitePng = await raw("0000000000000000");
   const blackPng = await raw("ffffffffffffffff");
 
-  assertEquals(
+  assert.deepEqual(
     Array.from((await sharp(whitePng).grayscale().raw().toBuffer()).values()),
     Array(64).fill(255),
   );
-  assertEquals(
+  assert.deepEqual(
     Array.from((await sharp(blackPng).grayscale().raw().toBuffer()).values()),
     Array(64).fill(0),
   );
 });
 
-Deno.test("save appends .png and writes the fingerprint", async () => {
-  const directory = await Deno.makeTempDir();
+test("save appends .png and writes the fingerprint", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "dhash-"));
   const filePath = `${directory}/fingerprint`;
 
   try {
     await save("0000000000000000", filePath);
-    const png = await Deno.readFile(`${filePath}.png`);
+    const png = await readFile(`${filePath}.png`);
 
-    assertEquals(
+    assert.deepEqual(
       Array.from((await sharp(png).grayscale().raw().toBuffer()).values()),
       Array(64).fill(255),
     );
   } finally {
-    await Deno.remove(directory, { recursive: true });
+    await rm(directory, { recursive: true });
   }
 });
