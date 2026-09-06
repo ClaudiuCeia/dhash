@@ -35,6 +35,12 @@ const expectedFiles = [
   "/LICENSE",
   "/README.md",
   "/deno.json",
+  "/docs/readme/README.md",
+  "/docs/readme/crop.webp",
+  "/docs/readme/heavy-watermark.webp",
+  "/docs/readme/original.webp",
+  "/docs/readme/stickers.webp",
+  "/docs/readme/watermark.webp",
   "/mod.ts",
   "/src/dhash.ts",
 ];

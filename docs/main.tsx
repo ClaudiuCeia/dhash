@@ -154,10 +154,26 @@ function css(body: string, status = 200): Response {
   });
 }
 
+function png(body: Uint8Array<ArrayBuffer>, status = 200): Response {
+  return new Response(body, {
+    status,
+    headers: {
+      "content-type": "image/png",
+      "cache-control": "public, max-age=3600",
+      "x-content-type-options": "nosniff",
+    },
+  });
+}
+
 const CLIENT_JS_PATH = new URL("./client.js", import.meta.url);
 const STYLES_PATH = new URL("./styles.css", import.meta.url);
+const SOCIAL_PREVIEW_PATH = new URL(
+  "./readme/social-preview.png",
+  import.meta.url,
+);
 let clientJsCache: string | null = null;
 let stylesCache: string | null = null;
+let socialPreviewCache: Uint8Array<ArrayBuffer> | null = null;
 async function getClientJs(): Promise<string> {
   if (clientJsCache === null) {
     clientJsCache = await Deno.readTextFile(CLIENT_JS_PATH);
@@ -170,6 +186,13 @@ async function getStyles(): Promise<string> {
     stylesCache = await Deno.readTextFile(STYLES_PATH);
   }
   return stylesCache;
+}
+
+async function getSocialPreview(): Promise<Uint8Array<ArrayBuffer>> {
+  if (socialPreviewCache === null) {
+    socialPreviewCache = await Deno.readFile(SOCIAL_PREVIEW_PATH);
+  }
+  return socialPreviewCache;
 }
 
 const GitHubMark = (
@@ -208,11 +231,30 @@ function Page() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="dhash-deployment" content={deployment.sha} />
-        <title>dHash demo</title>
+        <title>Compare near-duplicate images with dHash</title>
         <meta
           name="description"
-          content="Upload up to 20 images, compute perceptual hashes (dHash), then sort by similarity."
+          content="Upload images and compare their 64-bit perceptual hashes by Hamming distance."
         />
+        <meta
+          property="og:title"
+          content="Compare near-duplicate images with dHash"
+        />
+        <meta
+          property="og:description"
+          content="Upload images and compare their 64-bit perceptual hashes by Hamming distance."
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://dhash.claudiuceia.deno.net/"
+        />
+        <meta
+          property="og:image"
+          content="https://dhash.claudiuceia.deno.net/social-preview.png"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://dhash.claudiuceia.deno.net/" />
         <link rel="stylesheet" href="/styles.css" />
       </head>
       <body>
@@ -228,17 +270,16 @@ function Page() {
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
                   <h1 class="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                    dHash demo
+                    Compare near-duplicate images
                   </h1>
                 </div>
                 <p class="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
                   Upload up to{" "}
                   <span class="font-semibold text-slate-900">{MAX_FILES}</span>
                   {" "}
-                  images (max{" "}
-                  <span class="font-semibold text-slate-900">10 MiB</span>{" "}
-                  each). We compute 64-bit dHashes and sort by similarity
-                  (Hamming distance) to a reference image you select.
+                  images, choose a reference, and rank the rest by 64-bit dHash
+                  distance. Each image can be up to{" "}
+                  <span class="font-semibold text-slate-900">10 MiB</span>.
                 </p>
               </div>
               <nav class="flex shrink-0 items-center gap-2">
@@ -251,6 +292,16 @@ function Page() {
                   title="GitHub"
                 >
                   <span aria-hidden="true">{GitHubMark}</span>
+                </a>
+                <a
+                  href="https://www.npmjs.com/package/@claudiu-ceia/dhash"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white/75 px-3 font-mono text-xs font-semibold text-slate-900 shadow-xs transition hover:shadow-md focus:outline-hidden focus:ring-2 focus:ring-emerald-300"
+                  aria-label="npm package"
+                  title="npm"
+                >
+                  npm
                 </a>
                 <a
                   href="https://jsr.io/@claudiu-ceia/dhash"
@@ -323,6 +374,12 @@ function Page() {
                   aria-live="assertive"
                 />
 
+                <p class="mt-5 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-xs leading-relaxed text-slate-700">
+                  Lower distance means the hashes differ in fewer bits. A
+                  distance of 0 is the same fingerprint, not proof of an
+                  identical file.
+                </p>
+
                 <div
                   id="grid"
                   class="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3"
@@ -357,17 +414,32 @@ function Page() {
                     <li class="flex gap-2">
                       <span class="mt-[6px] inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
                       <span>
-                        Everything stays in memory (no persistence).
-                      </span>
-                    </li>
-                    <li class="flex gap-2">
-                      <span class="mt-[6px] inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-400" />
-                      <span>
                         Select any computed card to set the reference image and
                         re-sort. Cards support mouse and keyboard input.
                       </span>
                     </li>
                   </ul>
+                </div>
+                <div class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                  <label
+                    for="threshold"
+                    class="text-sm font-medium text-slate-900"
+                  >
+                    Mark as likely duplicate at distance &lt;=
+                  </label>
+                  <input
+                    id="threshold"
+                    type="number"
+                    min="0"
+                    max="64"
+                    value="8"
+                    class="ml-2 w-16 rounded-lg border border-emerald-300 bg-white px-2 py-1 font-mono text-sm text-slate-900"
+                  />
+                  <p class="mt-2 text-xs leading-relaxed text-slate-600">
+                    This is an application-defined example threshold, not a
+                    package default. dHash is not crop invariant, so a crop can
+                    move far beyond the selected value.
+                  </p>
                 </div>
                 <p class="mt-4 text-xs text-slate-600">
                   Computed server-side using{" "}
@@ -435,6 +507,10 @@ export function createHandler(
 
     if (req.method === "GET" && path === "/styles.css") {
       return css(await getStyles());
+    }
+
+    if (req.method === "GET" && path === "/social-preview.png") {
+      return png(await getSocialPreview());
     }
 
     if (req.method === "POST" && path === "/hash") {

@@ -18,6 +18,12 @@ Deno.test("demo serves local assets with a restrictive CSP", async () => {
     "default-src 'none'",
   );
   assertStringIncludes(html, 'href="/styles.css"');
+  assertStringIncludes(html, "Compare near-duplicate images with dHash");
+  assertStringIncludes(
+    html,
+    "A distance of 0 is the same fingerprint, not proof of an identical file.",
+  );
+  assertStringIncludes(html, 'id="threshold"');
   assertStringIncludes(
     html,
     '<meta name="dhash-deployment" content="development"',
@@ -32,6 +38,8 @@ Deno.test("demo serves local assets with a restrictive CSP", async () => {
   const styles = await handler(new Request(url("/styles.css")));
   assertStringIncludes(styles.headers.get("content-type") ?? "", "text/css");
   assertMatch(await styles.text(), /\.rounded-3xl/);
+  const preview = await handler(new Request(url("/social-preview.png")));
+  assertStringIncludes(preview.headers.get("content-type") ?? "", "image/png");
 });
 
 Deno.test("demo hashes bounded request bodies", async () => {

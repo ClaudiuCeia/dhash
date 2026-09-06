@@ -1,6 +1,7 @@
 {
   "nodeModulesDir": "auto",
   "imports": {
+    "@claudiu-ceia/dhash": "./mod.ts",
     "bun:test": "./tests/deno_test_compat.ts",
     "sharp": "npm:sharp@0.35.4"
   },
@@ -9,6 +10,6 @@
     "frozen": true
   },
   "test": {
-    "include": ["tests/**/*.test.ts"]
+    "include": ["tests/**/*.test.ts", "examples/**/*.test.ts"]
   }
 }

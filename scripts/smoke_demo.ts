@@ -4,11 +4,11 @@ const expectedDeployment = Deno.env.get("EXPECTED_DEPLOY_SHA");
 if (!expectedDeployment) throw new Error("EXPECTED_DEPLOY_SHA is required.");
 const expectedVersion = Deno.env.get("EXPECTED_VERSION");
 if (!expectedVersion) throw new Error("EXPECTED_VERSION is required.");
-const EXPECTED_FIXTURE_HASH = "0c7725cc0d25746c";
+const EXPECTED_FIXTURE_HASH = "0018001a5a0000fc";
 const FETCH_TIMEOUT_MS = 10_000;
 
 const fixture = await Deno.readFile(
-  new URL("../tests/dalle.png", import.meta.url),
+  new URL("../tests/earthrise.jpg", import.meta.url),
 );
 
 async function expectStatus(path: string, status: number): Promise<Response> {
@@ -46,6 +46,7 @@ async function smokeTest(): Promise<void> {
 
   await expectStatus("/client.js", 200);
   await expectStatus("/styles.css", 200);
+  await expectStatus("/social-preview.png", 200);
 
   const hashResponse = await fetch(`${baseUrl}/hash`, {
     method: "POST",

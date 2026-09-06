@@ -37,8 +37,8 @@ jobs:
         run: |
           bun --eval '
             import { compare, dhash } from "@claudiu-ceia/dhash";
-            const hash = await dhash("./tests/dalle.png");
-            if (hash !== "0c7725cc0d25746c" || compare(hash, hash) !== 0) {
+            const hash = await dhash("./tests/earthrise.jpg");
+            if (hash !== "0018001a5a0000fc" || compare(hash, hash) !== 0) {
               throw new Error("Bun package runtime check failed");
             }
           '
@@ -73,8 +73,8 @@ jobs:
         run: |
           deno eval '
             import { compare, dhash } from "@claudiu-ceia/dhash";
-            const hash = await dhash("./tests/dalle.png");
-            if (hash !== "0c7725cc0d25746c" || compare(hash, hash) !== 0) {
+            const hash = await dhash("./tests/earthrise.jpg");
+            if (hash !== "0018001a5a0000fc" || compare(hash, hash) !== 0) {
               throw new Error("Deno package runtime check failed");
             }
           '
