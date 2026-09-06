@@ -63,6 +63,8 @@ Deno.test("client preserves card focus and ignores cancelled runs", async () => 
     });
     const client = await import(`./client.js?test=${crypto.randomUUID()}`);
     assertEquals(client.parseThreshold("8"), 8);
+    assertEquals(client.parseThreshold(""), null);
+    assertEquals(client.parseThreshold("   "), null);
     assertEquals(client.parseThreshold("-1"), null);
     assertEquals(client.parseThreshold("65"), null);
     assertEquals(client.parseThreshold("8.5"), null);

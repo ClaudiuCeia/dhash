@@ -136,6 +136,7 @@ function hammingHex(a, b) {
 }
 
 export function parseThreshold(value) {
+  if (value.trim() === "") return null;
   const threshold = Number(value);
   return Number.isInteger(threshold) && threshold >= 0 && threshold <= 64
     ? threshold
