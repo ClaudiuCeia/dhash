@@ -71,7 +71,7 @@ jobs:
 
       - name: Verify Deno package runtime
         run: |
-          deno eval --allow-read --allow-ffi --allow-env '
+          deno eval '
             import { compare, dhash } from "@claudiu-ceia/dhash";
             const hash = await dhash("./tests/dalle.png");
             if (hash !== "0c7725cc0d25746c" || compare(hash, hash) !== 0) {
