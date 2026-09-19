@@ -12,7 +12,6 @@
     "url": "https://github.com/ClaudiuCeia/dhash/issues"
   },
   "type": "module",
-  "private": true,
   "sideEffects": false,
   "keywords": [
     "typescript",
@@ -57,9 +56,9 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.3",
-    "@types/bun": "1.4.1",
-    "oxfmt": "0.66.0",
-    "oxlint": "1.81.0",
+    "@types/bun": "1.4.2",
+    "oxfmt": "0.68.0",
+    "oxlint": "1.83.0",
     "typescript": "~7.0.0"
   },
   "engines": {
