@@ -39,6 +39,6 @@
     ]
   },
   "imports": {
-    "sharp": "npm:sharp@0.35.4"
+    "sharp": "npm:sharp@0.35.5"
   }
 }
