@@ -6,8 +6,8 @@
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "npm:@tailwindcss/cli@4.3.3": "4.3.3",
     "npm:happy-dom@20.14.5": "20.14.5",
-    "npm:preact-render-to-string@6.7.0": "6.7.0_preact@10.29.8",
-    "npm:preact@10.29.8": "10.29.8_preact-render-to-string@6.7.0",
+    "npm:preact-render-to-string@6.8.0": "6.8.0_preact@11.0.0",
+    "npm:preact@11.0.0": "11.0.0_preact-render-to-string@6.8.0",
     "npm:sharp@0.35.4": "0.35.4",
     "npm:tailwindcss@4.3.3": "4.3.3"
   },
@@ -601,14 +601,14 @@
     "picomatch@2.3.2": {
       "integrity": "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA=="
     },
-    "preact-render-to-string@6.7.0_preact@10.29.8": {
-      "integrity": "sha512-Z4WR8fmLMRpdYqJ9i7vrlXSsSrxVJydwrkEXHapexfARbWfGb7vGcnvNQnIzN0cXciMVOlz/XLoiMCi9gUsy9Q==",
+    "preact-render-to-string@6.8.0_preact@11.0.0": {
+      "integrity": "sha512-2qiMrReQz+MZ5+/bT27kbVnFE7QNCC2fku/Tnc2H5bFUS3I3ASbRy0q72XLZ+2p2KyDE5xMfvSEtkmVo6TRNyA==",
       "dependencies": [
         "preact"
       ]
     },
-    "preact@10.29.8_preact-render-to-string@6.7.0": {
-      "integrity": "sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==",
+    "preact@11.0.0_preact-render-to-string@6.8.0": {
+      "integrity": "sha512-LRTLKuSe6VYPhvBDjwFaX+nuZnpsw6IN2GSboisAvhGsncylBmrbDCERhgKDn6yP2mAwbGvsB5OVyTe33M8gBg==",
       "dependencies": [
         "preact-render-to-string"
       ],
@@ -689,8 +689,8 @@
       "jsr:@std/assert@^1.0.19",
       "npm:@tailwindcss/cli@4.3.3",
       "npm:happy-dom@20.14.5",
-      "npm:preact-render-to-string@6.7.0",
-      "npm:preact@10.29.8",
+      "npm:preact-render-to-string@6.8.0",
+      "npm:preact@11.0.0",
       "npm:tailwindcss@4.3.3"
     ]
   }
